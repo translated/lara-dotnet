@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// <summary>
 /// Represents a glossary match result.

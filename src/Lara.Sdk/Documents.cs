@@ -1,4 +1,4 @@
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Document management service
 public class Documents

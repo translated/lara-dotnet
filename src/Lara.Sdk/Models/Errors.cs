@@ -1,4 +1,4 @@
-namespace Lara;
+namespace Lara.Sdk;
 
 /// The base exception class for all Lara SDK errors.
 public class LaraException : Exception

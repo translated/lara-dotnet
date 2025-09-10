@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// <summary>
 /// Represents the result of a text translation operation.

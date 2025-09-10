@@ -1,4 +1,4 @@
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Contains the SDK version information.
 public static class SdkVersion

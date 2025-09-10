@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// <summary>
 /// Represents a translation memory match result.

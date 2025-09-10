@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Represents a glossary in the Lara API.
 public class Glossary

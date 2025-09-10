@@ -1,4 +1,4 @@
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Glossary management service
 public class Glossaries

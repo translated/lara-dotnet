@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Represents the priority levels for translation operations.
 public enum TranslatePriority

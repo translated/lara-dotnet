@@ -1,4 +1,4 @@
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Configuration options for the Lara API client.
 public class ClientOptions

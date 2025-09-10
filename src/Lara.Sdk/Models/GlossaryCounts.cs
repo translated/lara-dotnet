@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Represents glossary term counts per language pair.
 public class GlossaryCounts

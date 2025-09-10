@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Represents a text block with translatability flag.
 public class TextBlock

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// S3 client for handling file uploads and downloads
 internal class S3Client

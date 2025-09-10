@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// The main Lara SDK translator class providing access to all translation services.
 public class Translator

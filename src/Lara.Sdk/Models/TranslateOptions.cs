@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Options for text translation operations. Matches the Java TranslateOptions pattern.
 public class TranslateOptions

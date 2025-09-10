@@ -1,4 +1,4 @@
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Represents the credentials required to authenticate with the Lara API.
 /// Contains the access key ID and access key secret for HMAC authentication.

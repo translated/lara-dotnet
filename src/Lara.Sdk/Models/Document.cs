@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Represents the status of a document translation operation.
 [JsonConverter(typeof(JsonStringEnumConverter))]

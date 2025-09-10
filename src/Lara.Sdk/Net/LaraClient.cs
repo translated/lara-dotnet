@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using System.Globalization;
 using System.IO;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Main HTTP client for the Lara API providing HMAC authentication
 public class LaraClient

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Lara;
+namespace Lara.Sdk;
 
 /// Represents an HTTP response from the Lara API with convenient type conversion methods.
 public class ClientResponse

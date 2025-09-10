@@ -1,4 +1,4 @@
-namespace Lara;
+namespace Lara.Sdk;
 
 /// A fluent builder for HTTP parameters that automatically filters null values
 public class HttpParams<TValue>
