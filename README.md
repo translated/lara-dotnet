@@ -24,7 +24,7 @@ Lara's SDK full documentation is available at [https://developers.laratranslate.
 ### Installation
 
 ```bash
-dotnet add package Lara.SDK
+dotnet add package Lara.Sdk
 ```
 
 ### Basic Usage
@@ -32,7 +32,7 @@ dotnet add package Lara.SDK
 ```csharp
 using System;
 using System.Threading.Tasks;
-using Lara;
+using Lara.Sdk;
 
 class Program
 {
