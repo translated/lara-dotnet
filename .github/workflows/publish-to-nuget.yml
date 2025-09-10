@@ -21,16 +21,16 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/Lara/Lara.csproj
+        run: dotnet restore src/Lara.Sdk/Lara.Sdk.csproj
 
       - name: Build
-        run: dotnet build src/Lara/Lara.csproj --configuration Release --no-restore
+        run: dotnet build src/Lara.Sdk/Lara.Sdk.csproj --configuration Release --no-restore
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
 
       - name: Pack
-        run: dotnet pack src/Lara/Lara.csproj --configuration Release --no-build --output nupkgs
+        run: dotnet pack src/Lara.Sdk/Lara.Sdk.csproj --configuration Release --no-build --output nupkgs
 
       - name: Publish to NuGet
         run: dotnet nuget push nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
