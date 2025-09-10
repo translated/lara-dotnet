@@ -74,8 +74,8 @@ def set_version_in_SdkVersion(sdk_version_file: str, version: str):
 
 def update_version(part: str) -> str:
     # Find the main SDK csproj file
-    csproj_file = os.path.join(os.path.dirname(__file__), "src", "Lara", "Lara.csproj")
-    sdk_version_file = os.path.join(os.path.dirname(__file__), "src", "Lara", "SdkVersion.cs")
+    csproj_file = os.path.join(os.path.dirname(__file__), "src", "Lara.Sdk", "Lara.Sdk.csproj")
+    sdk_version_file = os.path.join(os.path.dirname(__file__), "src", "Lara.Sdk", "SdkVersion.cs")
 
     # Update version
     version = get_version_from_csproj(csproj_file)
