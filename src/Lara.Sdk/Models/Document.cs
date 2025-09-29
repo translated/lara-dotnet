@@ -57,6 +57,14 @@ public class DocumentTranslateOptions
     /// Gets or sets a value indicating whether to disable tracing for this request.
     [JsonPropertyName("no_trace")]
     public bool NoTrace { get; set; }
+
+    /// Gets or sets the password for password-protected PDF documents.
+    [JsonPropertyName("password")]
+    public string? Password { get; set; }
+    
+    /// Gets or sets the extraction parameters for the document.
+    [JsonPropertyName("extraction_params")]
+    public DocumentExtractionParams? ExtractionParams { get; set; }
 }
 
 /// Represents options for document download operations.
@@ -82,6 +90,14 @@ public class DocumentUploadOptions
     
     [JsonPropertyName("style")]
     public TranslationStyle? Style { get; set; }
+    
+    /// Gets or sets the password for password-protected PDF documents.
+    [JsonPropertyName("password")]
+    public string? Password { get; set; }
+    
+    /// Gets or sets the extraction parameters for the document.
+    [JsonPropertyName("extraction_params")]
+    public DocumentExtractionParams? ExtractionParams { get; set; }
 }
 
 /// Represents document options.
@@ -188,3 +204,19 @@ public enum TranslationStyle
     [JsonPropertyName("creative")]
     Creative
 } 
+
+
+public abstract class DocumentExtractionParams { }
+
+public class DocxExtractionParams : DocumentExtractionParams
+{
+    [JsonPropertyName("extract_comments")]
+    public bool? ExtractComments { get; set; }
+
+    [JsonPropertyName("accept_revisions")]
+    public bool? AcceptRevisions { get; set; }
+}
+
+// Future parameter types:
+// public class PdfExtractionParams : ExtractionParams { ... }
+// public class ExcelExtractionParams : ExtractionParams { ... }

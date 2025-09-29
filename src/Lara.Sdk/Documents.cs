@@ -61,6 +61,10 @@ public class Documents
                 createParams["glossaries"] = options.Glossaries;
             if (options.Style.HasValue)
                 createParams["style"] = options.Style.Value.ToString().ToLowerInvariant();
+            if (!string.IsNullOrEmpty(options.Password))
+                createParams["password"] = options.Password;
+            if (options.ExtractionParams != null)
+                createParams["extraction_params"] = options.ExtractionParams;
         }
 
         var headers = new Dictionary<string, string>();
@@ -118,7 +122,9 @@ public class Documents
             AdaptTo = options?.AdaptTo,
             Glossaries = options?.Glossaries,
             Style = options?.Style,
-            NoTrace = options?.NoTrace ?? false
+            NoTrace = options?.NoTrace ?? false,
+            Password = options?.Password,
+            ExtractionParams = options?.ExtractionParams
         };
 
         var document = await Upload(filePath, source, target, uploadOptions);
