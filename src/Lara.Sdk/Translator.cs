@@ -110,4 +110,37 @@ public class Translator
         
         return response.AsWrapped<TextResult>();
     }
+
+
+    public Task<DetectResult> Detect(string text, string? hint, IEnumerable<string>? passlist)
+    {
+        return DetectAny(text, hint, passlist);
+    }
+
+    public Task<DetectResult> Detect(string[] text, string? hint, IEnumerable<string>? passlist)
+    {
+        return DetectAny(text, hint, passlist);
+    }
+    
+    public Task<DetectResult> Detect(List<string> text, string? hint, IEnumerable<string>? passlist)
+    {
+        return DetectAny(text, hint, passlist);
+    }
+    
+    private async Task<DetectResult> DetectAny(object text, string? hint, IEnumerable<string>? passlist)
+    {
+        var parameters = new HttpParams<object>()
+            .Set("q", text);
+        if (hint != null)
+        {
+            parameters.Set("hint", hint);
+        }
+        if (passlist != null && passlist.Any())
+        {
+            parameters.Set("passlist", passlist);
+        }
+
+        var response = await Client.Post("/detect", parameters.Build());
+        return response.AsWrapped<DetectResult>();
+    }
 }

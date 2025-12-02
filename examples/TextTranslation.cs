@@ -183,6 +183,34 @@ namespace Lara.SDK.Examples
                 Console.WriteLine($"Error getting languages: {e.Message}");
                 return;
             }
+            
+            // Example 8: Detect language of a given text
+            Console.WriteLine("=== Language Detection ===");
+            try
+            {
+                var detectResult1 = await lara.detect("Hola, ¿cómo estás?");
+                Console.WriteLine("Original: Hola, ¿cómo estás?");
+                Console.WriteLine($"Detected Language: {detectResult1.Language}");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error detecting language: {e.Message}");
+                return;
+            }
+            
+            // Example 9: Detect language of a given text
+            Console.WriteLine("=== Language Detection with hint and passlist ===");
+            try
+            {
+                var detectResult2 = await lara.detect("Hola, ¿cómo estás?", "es", ["es", "fr", "de"]);
+                Console.WriteLine("Original: Hola, ¿cómo estás?");
+                Console.WriteLine($"Detected Language: {detectResult2.Language}");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error detecting language: {e.Message}");
+                return;
+            }
         }
     }
 }
