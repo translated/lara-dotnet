@@ -10,6 +10,8 @@ All major translation features are accessible, making it easy to integrate and c
 ## 🌍 **Features:**
 - **Text Translation**: Single strings, multiple strings, and complex text blocks
 - **Document Translation**: Word, PDF, and other document formats with status monitoring
+- **Image Translation**: Translate whole images or extract and translate text blocks
+- **Audio Translation**: Audio file translation with status monitoring
 - **Translation Memory**: Store and reuse translations for consistency
 - **Glossaries**: Enforce terminology standards across translations
 - **Language Detection**: Automatic source language identification
@@ -97,6 +99,28 @@ dotnet run -- text-translation
 ```bash
 cd examples
 dotnet run -- document-translation
+```
+
+### Image Translation
+- **[ImageTranslation.cs](examples/ImageTranslation.cs)** - Image translation examples
+  - Basic image translation
+  - Advanced options with memories and glossaries
+  - Extract and translate text from an image
+
+```bash
+cd examples
+dotnet run -- image-translation
+```
+
+### Audio Translation
+- **[AudioTranslation.cs](examples/AudioTranslation.cs)** - Audio translation examples
+  - Basic audio translation
+  - Advanced options with memories and glossaries
+  - Step-by-step translation with status monitoring
+
+```bash
+cd examples
+dotnet run -- audio-translation
 ```
 
 ### Translation Memory Management
@@ -227,6 +251,63 @@ var status = await lara.Documents.Status(document.Id);
 var downloadOptions = new DocumentDownloadOptions();
 
 var fileStream = await lara.Documents.Download(document.Id, downloadOptions);
+```
+
+### 🖼️ Image Translation
+
+```csharp
+var imagePath = "/path/to/your/image.png";  // Replace with actual file path
+
+// Translate image and receive a translated image stream
+var translatedImageStream = await lara.Images.Translate(imagePath, "en", "fr", new ImageTranslateOptions
+{
+    TextRemoval = ImageTextRemoval.Inpainting,
+    Style = TranslationStyle.Faithful
+});
+
+// Extract and translate text blocks from an image
+var textBlocks = await lara.Images.TranslateText(imagePath, "en", "fr", new ImageTextTranslateOptions
+{
+    AdaptTo = new[] {"mem_1A2b3C4d5E6f7G8h9I0jKl"},
+    Glossaries = new[] {"gls_1A2b3C4d5E6f7G8h9I0jKl"}
+});
+```
+
+### 🎵 Audio Translation
+#### Simple audio translation
+
+```csharp
+var filePath = "/path/to/your/audio.mp3";  // Replace with actual file path
+var audioStream = await lara.Audio.Translate(filePath, "en-US", "fr-FR");
+
+// With options
+var options = new AudioTranslateOptions
+{
+    AdaptTo = new[] {"mem_1A2b3C4d5E6f7G8h9I0jKl"},  // Replace with actual memory IDs
+    Glossaries = new[] {"gls_1A2b3C4d5E6f7G8h9I0jKl"}  // Replace with actual glossary IDs
+};
+
+var audioStream = await lara.Audio.Translate(filePath, "en-US", "fr-FR", options);
+```
+### Audio translation with status monitoring
+#### Audio upload
+```csharp
+// Optional: upload options
+var uploadOptions = new AudioUploadOptions
+{
+    AdaptTo = new[] {"mem_1A2b3C4d5E6f7G8h9I0jKl"},  // Replace with actual memory IDs
+    Glossaries = new[] {"gls_1A2b3C4d5E6f7G8h9I0jKl"}  // Replace with actual glossary IDs
+};
+
+var audio = await lara.Audio.Upload(filePath, "en-US", "fr-FR", uploadOptions);
+```
+#### Audio translation status monitoring
+```csharp
+var status = await lara.Audio.Status(audio.Id);
+```
+#### Download translated audio
+```csharp
+var audioStream = await lara.Audio.Download(audio.Id);
 ```
 
 ### 🧠 Memory Management
@@ -370,7 +451,9 @@ export LARA_ACCESS_KEY_SECRET="your-access-key-secret"
 # Run example files
 cd examples
 dotnet run -- text-translation
+dotnet run -- image-translation
 dotnet run -- document-translation
+dotnet run -- audio-translation
 dotnet run -- memories-management
 dotnet run -- glossaries-management
 ```

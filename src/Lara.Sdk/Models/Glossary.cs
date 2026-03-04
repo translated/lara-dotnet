@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Lara.Sdk;
@@ -14,27 +13,29 @@ public class Glossary
     }
 
     /// Gets the unique identifier for the glossary.
-    [JsonPropertyName("id")]
     public string Id { get; }
 
     /// Gets the date and time when the glossary was created.
-    [JsonPropertyName("created_at")]
     public DateTime CreatedAt { get; }
 
     /// Gets the date and time when the glossary was last updated.
-    [JsonPropertyName("updated_at")]
     public DateTime UpdatedAt { get; }
 
     /// Gets the name of the glossary.
-    [JsonPropertyName("name")]
     public string Name { get; }
 
     /// Gets the owner ID of the glossary.
-    [JsonPropertyName("owner_id")]
     public string OwnerId { get; }
 
     /// Initializes a new instance of the Glossary class.
-    public Glossary(string id, DateTime createdAt, DateTime updatedAt, string name, string ownerId)
+    [JsonConstructor]
+    public Glossary(
+        string id, 
+        DateTime createdAt, 
+        DateTime updatedAt, 
+        string name, 
+        string ownerId
+        )
     {
         Id = id;
         CreatedAt = createdAt;
@@ -44,18 +45,23 @@ public class Glossary
     }
 
     /// Gets the unique identifier for the glossary.
+    [Obsolete("Use the Id property instead. This method will be removed in a future release.")]
     public string GetId() => Id;
 
     /// Gets the date and time when the glossary was created.
+    [Obsolete("Use the CreatedAt property instead. This method will be removed in a future release.")]
     public DateTime GetCreatedAt() => CreatedAt;
 
     /// Gets the date and time when the glossary was last updated.
+    [Obsolete("Use the UpdatedAt property instead. This method will be removed in a future release.")]
     public DateTime GetUpdatedAt() => UpdatedAt;
 
     /// Gets the name of the glossary.
+    [Obsolete("Use the Name property instead. This method will be removed in a future release.")]
     public string GetName() => Name;
 
     /// Gets the owner ID of the glossary.
+    [Obsolete("Use the OwnerId property instead. This method will be removed in a future release.")]
     public string GetOwnerId() => OwnerId;
 
     /// Returns a string representation of the glossary.

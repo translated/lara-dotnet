@@ -15,9 +15,11 @@ namespace Lara.SDK.Examples
                 Console.WriteLine("Usage: dotnet run -- [example]");
                 Console.WriteLine();
                 Console.WriteLine("Available examples:");
-                Console.WriteLine("  text-translation     - Text translation examples");
-                Console.WriteLine("  document-translation - Document translation examples");
-                Console.WriteLine("  memories-management  - Translation memory management");
+                Console.WriteLine("  text-translation      - Text translation examples");
+                Console.WriteLine("  image-translation     - Image translation examples");
+                Console.WriteLine("  document-translation  - Document translation examples");
+                Console.WriteLine("  audio-translation    - Audio translation examples");
+                Console.WriteLine("  memories-management   - Translation memory management");
                 Console.WriteLine("  glossaries-management - Glossary management");
                 Console.WriteLine();
                 Console.WriteLine("Example: dotnet run -- text-translation");
@@ -31,8 +33,14 @@ namespace Lara.SDK.Examples
                 case "text-translation":
                     await TextTranslation.RunExamples();
                     break;
+                case "image-translation":
+                    await ImageTranslation.RunExamples();
+                    break;
                 case "document-translation":
                     await DocumentTranslation.RunExamples();
+                    break;
+                case "audio-translation":
+                    await AudioTranslation.RunExamples();
                     break;
                 case "memories-management":
                     await MemoriesManagement.RunExamples();

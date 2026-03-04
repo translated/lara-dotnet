@@ -4,15 +4,17 @@ namespace Lara.Sdk;
 
 public class DetectResult
 {
-    [JsonPropertyName("language")]
     public string Language { get;  }
     
-    [JsonPropertyName("content_type")]
     public string ContentType { get;  }
     
-    public DetectResult(string language, string contentType)
+    public DetectPrediction[] Predictions { get;  }
+ 
+    [JsonConstructor]
+    public DetectResult(string language, string contentType, DetectPrediction[] predictions)
     {
         Language = language;
         ContentType = contentType;
+        Predictions = predictions;
     }
 }

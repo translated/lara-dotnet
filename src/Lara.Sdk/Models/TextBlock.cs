@@ -6,30 +6,25 @@ namespace Lara.Sdk;
 public class TextBlock
 {
     /// Gets the text content of the block.
-    [JsonPropertyName("text")]
     public string Text { get; }
 
     /// Gets a value indicating whether this text block is translatable.
-    [JsonPropertyName("translatable")]
     public bool Translatable { get; }
 
-    /// Initializes a new instance with text only (defaults to translatable).
-    /// <param name="text">The text content.</param>
-    public TextBlock(string text) : this(text, true)
-    {
-    }
-
     /// Initializes a new instance with text and translatability flag.
-    public TextBlock(string text, bool translatable)
+    [JsonConstructor]
+    public TextBlock(string text, bool translatable = true)
     {
-        Text = text ?? throw new ArgumentNullException(nameof(text));
+        Text = text;
         Translatable = translatable;
     }
 
     /// Gets the text content of the block.
+    [Obsolete("Use the Text property instead. This property will be removed in a future release.")]
     public string GetText() => Text;
 
     /// Gets whether this text block is translatable.
+    [Obsolete("Use the Translatable property instead. This property will be removed in a future release.")]
     public bool IsTranslatable() => Translatable;
 
     /// Returns a string representation of the text block.

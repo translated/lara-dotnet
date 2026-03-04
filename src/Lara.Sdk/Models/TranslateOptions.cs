@@ -61,6 +61,10 @@ public class TranslateOptions
     [JsonPropertyName("style")]
     public TranslationStyle? Style { get; set; }
 
+    /// Gets or sets a value indicating whether to enable reasoning mode for translation.
+    [JsonPropertyName("reasoning")]
+    public bool? Reasoning { get; set; }
+
     /// Converts the options to HTTP parameters. Matches Java toParams() method.
     /// <returns>HTTP parameters for the request.</returns>
     public HttpParams<object> ToParams()
@@ -78,7 +82,8 @@ public class TranslateOptions
             .Set("cache_ttl", CacheTTLSeconds)
             .Set("no_trace", NoTrace)
             .Set("verbose", Verbose)
-            .Set("style", Style?.ToString().ToLowerInvariant());
+            .Set("style", Style?.ToString().ToLowerInvariant())
+            .Set("reasoning", Reasoning);
 
         return parameters;
     }

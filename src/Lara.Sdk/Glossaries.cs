@@ -15,67 +15,67 @@ public class Glossaries
     /// Lists all glossaries available to the user.
     public async Task<List<Glossary>> List()
     {
-        var response = await _client.Get("/glossaries");
-        var glossaries = response.AsWrappedList<Glossary>();
-        return glossaries;
+        return await _client.Get<List<Glossary>>("/v2/glossaries");
     }
-
+    
     /// Creates a new glossary with a custom name.
     public async Task<Glossary> Create(string name)
     {
-        var response = await _client.Post("/glossaries", new HttpParams<object>().Set("name", name).Build());
-        return response.AsWrapped<Glossary>();
+        return await _client.Post<Glossary>("/v2/glossaries", new HttpParams<object>().Set("name", name).Build());
     }
-
+    
     /// Gets a glossary by ID.
     public async Task<Glossary?> Get(string id)
     {
         try
         {
-            var response = await _client.Get($"/glossaries/{id}");
-            return response.AsWrapped<Glossary>();
+            return await _client.Get<Glossary>($"/v2/glossaries/{id}");
         }
         catch (LaraApiException ex) when (ex.StatusCode == 404)
         {
             return null;
         }
     }
-
+    
     /// Deletes a specific glossary.
     public async Task<Glossary> Delete(string id)
     {
-        var response = await _client.Delete($"/glossaries/{id}");
-        return response.AsWrapped<Glossary>();
+        return await _client.Delete<Glossary>($"/v2/glossaries/{id}");
     }
-
+    
     /// Updates the name of a specific glossary.
     public async Task<Glossary> Update(string id, string name)
     {
-        var response = await _client.Put($"/glossaries/{id}", new HttpParams<object>().Set("name", name).Build());
-        return response.AsWrapped<Glossary>();
+        return await _client.Put<Glossary>($"/v2/glossaries/{id}", new HttpParams<object>().Set("name", name).Build());
     }
-
+    
     /// Imports a CSV file into an existing glossary.
     public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = null)
     {
-        var parameters = new HttpParams<object>();
+        return await ImportCsv(id, csvFilePath, GlossaryFileFormat.CsvTableUni, gzip);
+    }
+
+    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, GlossaryFileFormat contentType, bool? gzip = null)
+    {
+        var parameters = new HttpParams<object>()
+            .Set("content_type", contentType.ToString());
+        
         if (gzip ?? csvFilePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
         {
             parameters.Set("compression", "gzip");
         }
-
-        var files = new Dictionary<string, string> { ["csv"] = csvFilePath };
-        var response = await _client.Post($"/glossaries/{id}/import", parameters.Build(), files);
-        return response.AsWrapped<GlossaryImport>();
+    
+        await using var fileStream = File.OpenRead(csvFilePath);
+        var files = new Dictionary<string, Stream> { ["csv"] = fileStream };
+        return await _client.Post<GlossaryImport>($"/v2/glossaries/{id}/import", parameters.Build(), files);
     }
-
+    
     /// Checks the status of an ongoing glossary import.
     public async Task<GlossaryImport> GetImportStatus(string id)
     {
-        var response = await _client.Get($"/glossaries/imports/{id}");
-        return response.AsWrapped<GlossaryImport>();
+        return await _client.Get<GlossaryImport>($"/v2/glossaries/imports/{id}");
     }
-
+    
     /// Waits for import to complete
     public async Task<GlossaryImport> WaitForImport(
         GlossaryImport glossaryImport, 
@@ -88,33 +88,80 @@ public class Glossaries
         {
             if (maxWaitTime > TimeSpan.Zero && DateTime.UtcNow - startTime > maxWaitTime)
                 throw new LaraTimeoutException();
-
+    
             await Task.Delay(TimeSpan.FromMilliseconds(_pollingInterval));
-
+    
             glossaryImport = await GetImportStatus(glossaryImport.Id);
             updateCallback?.Invoke(glossaryImport);
         }
-
+    
         return glossaryImport;
     }
-
+    
     /// Gets the counts for a glossary.
     public async Task<GlossaryCounts> Counts(string id)
     {
-        var response = await _client.Get($"/glossaries/{id}/counts");
-        return response.AsWrapped<GlossaryCounts>();
+        return await _client.Get<GlossaryCounts>($"/v2/glossaries/{id}/counts");
     }
-
+    
     /// Exports a glossary as CSV.
-    public async Task<Stream> Export(string id, string contentType, string source)
+    public async Task<Stream> Export(string id, string contentType, string? source)
     {
         var parameters = new Dictionary<string, object>
         {
             ["content_type"] = contentType,
-            ["source"] = source
         };
+        if (source != null)
+            parameters["source"] = source;
+        
+        return await _client.Get<Stream>($"/v2/glossaries/{id}/export", parameters);
+    }
 
-        var response = await _client.Get($"/glossaries/{id}/export", parameters);
-        return new MemoryStream(response.RawBytes ?? Array.Empty<byte>());
+    public async Task<Stream> Export(string id, GlossaryFileFormat contentType)
+    {
+        return await Export(id, contentType, null);
+    }
+    public async Task<Stream> Export(string id, GlossaryFileFormat contentType, string? source)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            ["content_type"] = contentType.ToString()
+        };
+        if (source != null)
+            parameters["source"] = source;
+
+        return await _client.Get<Stream>($"/v2/glossaries/{id}/export", parameters);
+    }
+
+    /// Adds or replaces terms in a glossary.
+    public async Task<GlossaryImport> AddOrReplaceEntry(string id, List<GlossaryTerm> terms, string? guid = null)
+    {
+        var parameters = new HttpParams<object>()
+            .Set("terms", terms);
+
+        if (guid != null)
+        {
+            parameters.Set("guid", guid);
+        }
+
+        return await _client.Put<GlossaryImport>($"/v2/glossaries/{id}/content", parameters.Build());
+    }
+
+    /// Deletes an entry from a glossary.
+    public async Task<GlossaryImport> DeleteEntry(string id, GlossaryTerm? term = null, string? guid = null)
+    {
+        var parameters = new HttpParams<object>();
+
+        if (term != null)
+        {
+            parameters.Set("term", term);
+        }
+
+        if (guid != null)
+        {
+            parameters.Set("guid", guid);
+        }
+
+        return await _client.Delete<GlossaryImport>($"/v2/glossaries/{id}/content", parameters.Build());
     }
 }

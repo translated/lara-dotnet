@@ -188,7 +188,7 @@ namespace Lara.SDK.Examples
             Console.WriteLine("=== Language Detection ===");
             try
             {
-                var detectResult1 = await lara.detect("Hola, ¿cómo estás?");
+                var detectResult1 = await lara.Detect("Hola, ¿cómo estás?");
                 Console.WriteLine("Original: Hola, ¿cómo estás?");
                 Console.WriteLine($"Detected Language: {detectResult1.Language}");
             }
@@ -202,13 +202,45 @@ namespace Lara.SDK.Examples
             Console.WriteLine("=== Language Detection with hint and passlist ===");
             try
             {
-                var detectResult2 = await lara.detect("Hola, ¿cómo estás?", "es", ["es", "fr", "de"]);
+                var detectResult2 = await lara.Detect("Hola, ¿cómo estás?", "es", ["es", "fr", "de"]);
                 Console.WriteLine("Original: Hola, ¿cómo estás?");
                 Console.WriteLine($"Detected Language: {detectResult2.Language}");
             }
             catch (LaraException e)
             {
                 Console.WriteLine($"Error detecting language: {e.Message}");
+                return;
+            }
+
+            // Example 10: Translation with Lara Think (reasoning mode with streaming)
+            Console.WriteLine("\n=== Translation with Lara Think (Reasoning Mode) ===");
+            try
+            {
+                var options = new TranslateOptions
+                {
+                    Reasoning = true
+                };
+
+                var partialCount = 0;
+                var result = await lara.Translate(
+                    "The quantum entanglement phenomenon demonstrates the non-local nature of quantum mechanics.",
+                    "en-US",
+                    "it-IT",
+                    options,
+                    (partial) =>
+                    {
+                        // This callback is called for each partial result during the reasoning process
+                        partialCount++;
+                        Console.WriteLine($"Partial result #{partialCount}: {partial.Translation}");
+                    }
+                );
+
+                Console.WriteLine($"\nFinal translation: {result.Translation}");
+                Console.WriteLine($"Total partial results received: {partialCount}\n");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error with reasoning translation: {e.Message}\n");
                 return;
             }
         }

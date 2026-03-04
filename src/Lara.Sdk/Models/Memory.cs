@@ -6,44 +6,44 @@ namespace Lara.Sdk;
 public class Memory
 {
     /// Gets the unique identifier for the memory.
-    [JsonPropertyName("id")]
     public string Id { get; }
 
     /// Gets the date and time when the memory was created.
-    [JsonPropertyName("created_at")]
     public DateTime CreatedAt { get; }
 
     /// Gets the date and time when the memory was last updated.
-    [JsonPropertyName("updated_at")]
     public DateTime UpdatedAt { get; }
 
     /// Gets the date and time when the memory was shared.
-    [JsonPropertyName("shared_at")]
     public DateTime? SharedAt { get; }
 
     /// Gets the name of the memory.
-    [JsonPropertyName("name")]
     public string Name { get; }
 
     /// Gets the external ID for integration purposes.
-    [JsonPropertyName("external_id")]
     public string? ExternalId { get; }
 
-    /// Gets the secret key for the memory.
-    [JsonPropertyName("secret")]
+    /// Gets the secret key for the memory. ]
     public string? Secret { get; }
 
     /// Gets the owner ID of the memory.
-    [JsonPropertyName("owner_id")]
     public string OwnerId { get; }
 
     /// Gets the number of collaborators with access to this memory.
-    [JsonPropertyName("collaborators_count")]
     public int CollaboratorsCount { get; }
 
     /// Initializes a new instance of the Memory class.
-    public Memory(string id, DateTime createdAt, DateTime updatedAt, DateTime? sharedAt, 
-        string name, string? externalId, string? secret, string ownerId, int collaboratorsCount)
+    [JsonConstructor]
+    public Memory(
+        string id, 
+        DateTime createdAt, 
+        DateTime updatedAt, 
+        DateTime? sharedAt, 
+        string name, 
+        string? externalId, 
+        string? secret, 
+        string ownerId, 
+        int collaboratorsCount)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -57,30 +57,39 @@ public class Memory
     }
 
     /// Gets the unique identifier for the memory.
+    [Obsolete("Use the Id property instead. This method will be removed in a future release.")]
     public string GetId() => Id;
 
     /// Gets the date and time when the memory was created.
+    [Obsolete("Use the CreatedAt property instead. This method will be removed in a future release.")]
     public DateTime GetCreatedAt() => CreatedAt;
 
     /// Gets the date and time when the memory was last updated.
+    [Obsolete("Use the UpdatedAt property instead. This method will be removed in a future release.")]
     public DateTime GetUpdatedAt() => UpdatedAt;
 
     /// Gets the date and time when the memory was shared.
+    [Obsolete("Use the SharedAt property instead. This method will be removed in a future release.")]
     public DateTime? GetSharedAt() => SharedAt;
 
     /// Gets the name of the memory.
+    [Obsolete("Use the Name property instead. This method will be removed in a future release.")]
     public string GetName() => Name;
 
     /// Gets the external ID for integration purposes.
+    [Obsolete("Use the ExternalId property instead. This method will be removed in a future release.")]
     public string? GetExternalId() => ExternalId;
 
     /// Gets the secret key for the memory.
+    [Obsolete("Use the Secret property instead. This method will be removed in a future release.")]
     public string? GetSecret() => Secret;
 
     /// Gets the owner ID of the memory.
+    [Obsolete("Use the OwnerId property instead. This method will be removed in a future release.")]
     public string GetOwnerId() => OwnerId;
 
     /// Gets the number of collaborators with access to this memory.
+    [Obsolete("Use the CollaboratorsCount property instead. This method will be removed in a future release.")]
     public int GetCollaboratorsCount() => CollaboratorsCount;
 
     /// Returns a string representation of the memory.

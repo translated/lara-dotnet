@@ -46,7 +46,7 @@ namespace Lara.SDK.Examples
             Console.WriteLine("Glossaries require a specific subscription plan.");
             Console.WriteLine("If you encounter errors, please check your subscription level.");
 
-            string? glossaryId = null;
+            string glossaryId;
 
             // Example 1: Basic glossary management
             Console.WriteLine("=== Basic Glossary Management ===");
@@ -68,19 +68,21 @@ namespace Lara.SDK.Examples
                 return;
             }
 
+            if (glossaryId == null) return;
+
             // Example 2: Glossary operations
             Console.WriteLine("=== Glossary Operations ===");
             try
             {
                 // Get glossary details
-                var retrievedGlossary = await lara.Glossaries.Get(glossaryId!);
+                var retrievedGlossary = await lara.Glossaries.Get(glossaryId);
                 if (retrievedGlossary != null)
                 {
                     Console.WriteLine($"Glossary: {retrievedGlossary.Name} (Owner: {retrievedGlossary.OwnerId})");
                 }
 
                 // Get glossary statistics
-                var counts = await lara.Glossaries.Counts(glossaryId!);
+                var counts = await lara.Glossaries.Counts(glossaryId);
                 if (counts.Unidirectional != null)
                 {
                     foreach (var entry in counts.Unidirectional)
@@ -90,7 +92,7 @@ namespace Lara.SDK.Examples
                 }
 
                 // Update glossary
-                var updatedGlossary = await lara.Glossaries.Update(glossaryId!, "UpdatedDemoGlossary");
+                var updatedGlossary = await lara.Glossaries.Update(glossaryId, "UpdatedDemoGlossary");
                 Console.WriteLine($"Updated name: 'MyDemoGlossary' -> '{updatedGlossary.Name}'");
             }
             catch (LaraException e)
@@ -109,7 +111,7 @@ namespace Lara.SDK.Examples
                 try
                 {
                     Console.WriteLine($"Importing CSV file: {Path.GetFileName(csvFilePath)}");
-                    var import = await lara.Glossaries.ImportCsv(glossaryId!, csvFilePath);
+                    var import = await lara.Glossaries.ImportCsv(glossaryId, csvFilePath);
                     Console.WriteLine($"Import started with ID: {import.Id}");
                     Console.WriteLine($"Initial progress: {import.Progress * 100}%");
 
@@ -147,7 +149,7 @@ namespace Lara.SDK.Examples
             {
                 // Export as standard CSV
                 Console.WriteLine("Exporting as standard CSV...");
-                using var csvStream = await lara.Glossaries.Export(glossaryId!, "csv/table-uni", "en-US");
+                using var csvStream = await lara.Glossaries.Export(glossaryId, "csv/table-uni", "en-US");
                 using var csvReader = new StreamReader(csvStream);
                 var csvText = await csvReader.ReadToEndAsync();
                 Console.WriteLine($"CSV unidirectional export successful ({csvText.Length} bytes)");
@@ -167,7 +169,7 @@ namespace Lara.SDK.Examples
             try
             {
                 // Get detailed counts
-                var counts = await lara.Glossaries.Counts(glossaryId!);
+                var counts = await lara.Glossaries.Counts(glossaryId);
 
                 Console.WriteLine("Detailed glossary terms count:");
 
@@ -196,22 +198,64 @@ namespace Lara.SDK.Examples
                 Console.WriteLine($"Error getting glossary terms count: {e.Message}\n");
             }
 
+            // Example 6: Add/Replace and Delete glossary term entries
+            Console.WriteLine("=== Glossary Term Entries ===");
+            try
+            {
+                // Add a new entry with multiple language terms
+                var terms = new List<GlossaryTerm>
+                {
+                    new GlossaryTerm("en-US", "computer"),
+                    new GlossaryTerm("it-IT", "computer")
+                };
+                var addResult = await lara.Glossaries.AddOrReplaceEntry(glossaryId, terms);
+                Console.WriteLine($"Added entry, import ID: {addResult.Id}");
+
+                // Add another entry with a custom GUID
+                var termsWithGuid = new List<GlossaryTerm>
+                {
+                    new GlossaryTerm("en-US", "keyboard"),
+                    new GlossaryTerm("it-IT", "tastiera")
+                };
+                var addWithGuidResult = await lara.Glossaries.AddOrReplaceEntry(glossaryId, termsWithGuid, "custom-guid-123");
+                Console.WriteLine($"Added entry with custom GUID (import ID: {addWithGuidResult.Id})");
+
+                // Replace an existing entry by using the same GUID
+                var updatedTerms = new List<GlossaryTerm>
+                {
+                    new GlossaryTerm("en-US", "keyboard"),
+                    new GlossaryTerm("it-IT", "tastiera"),
+                    new GlossaryTerm("fr-FR", "clavier")
+                };
+                var replaceResult = await lara.Glossaries.AddOrReplaceEntry(glossaryId, updatedTerms, "custom-guid-123");
+                Console.WriteLine($"Replaced entry using existing GUID (import ID: {replaceResult.Id})");
+
+                // Delete an entry by GUID
+                var deleteByGuidResult = await lara.Glossaries.DeleteEntry(glossaryId, null, "custom-guid-123");
+                Console.WriteLine($"Deleted entry by GUID (import ID: {deleteByGuidResult.Id})");
+
+                // Delete an entry by term
+                var deleteByTermResult = await lara.Glossaries.DeleteEntry(glossaryId, new GlossaryTerm("en-US", "computer"));
+                Console.WriteLine($"Deleted entry by term (import ID: {deleteByTermResult.Id})\n");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error with term entries: {e.Message}\n");
+            }
+
             // Cleanup
             Console.WriteLine("=== Cleanup ===");
             try
             {
-                if (glossaryId != null)
-                {
-                    var deletedGlossary = await lara.Glossaries.Delete(glossaryId);
-                    Console.WriteLine($"Deleted glossary: {deletedGlossary.Name}");
+                var deletedGlossary = await lara.Glossaries.Delete(glossaryId);
+                Console.WriteLine($"Deleted glossary: {deletedGlossary.Name}");
 
-                    // Clean up export files - replace with actual cleanup if needed
-                    var exportFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "exported_glossary.csv");
-                    if (File.Exists(exportFilePath))
-                    {
-                        File.Delete(exportFilePath);
-                        Console.WriteLine("Cleaned up export file");
-                    }
+                // Clean up export files - replace with actual cleanup if needed
+                var exportFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "exported_glossary.csv");
+                if (File.Exists(exportFilePath))
+                {
+                    File.Delete(exportFilePath);
+                    Console.WriteLine("Cleaned up export file");
                 }
             }
             catch (LaraException e)

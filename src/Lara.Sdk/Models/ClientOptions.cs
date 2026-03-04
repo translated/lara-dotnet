@@ -11,17 +11,27 @@ public class ClientOptions
     public string ServerUrl 
     { 
         get => _serverUrl ?? DefaultServerUrl;
-        private set => _serverUrl = value;
+        set
+        {
+            if (value != null)
+            {
+                while (value.EndsWith("/"))
+                {
+                    value = value.Substring(0, value.Length - 1);
+                }
+            }
+            _serverUrl = value;
+        }
     }
     
     /// Gets or sets the connection timeout in milliseconds.
-    public TimeSpan ConnectionTimeout { get; private set; } = TimeSpan.Zero;
+    public TimeSpan ConnectionTimeout { get; set; } = TimeSpan.Zero;
     
     /// Gets or sets the read timeout in milliseconds.
-    public TimeSpan ReadTimeout { get; private set; } = TimeSpan.Zero;
+    public TimeSpan ReadTimeout { get; set; } = TimeSpan.Zero;
 
     /// Sets the server URL with trailing slash normalization.
-
+    [Obsolete("Use the ServerUrl property instead. This method will be removed in a future version.")]
     public ClientOptions SetServerUrl(string? serverUrl)
     {
         if (serverUrl != null)
@@ -37,6 +47,7 @@ public class ClientOptions
     }
     
     /// Sets the connection timeout.
+    [Obsolete("Use the ConnectionTimeout property instead. This method will be removed in a future version.")]
     public ClientOptions SetConnectionTimeout(TimeSpan timeout)
     {
         ConnectionTimeout = timeout;
@@ -44,6 +55,7 @@ public class ClientOptions
     }
     
     /// Sets the read timeout.
+    [Obsolete("Use the ReadTimeout property instead. This method will be removed in a future version.")]
     public ClientOptions SetReadTimeout(TimeSpan timeout)
     {
         ReadTimeout = timeout;
