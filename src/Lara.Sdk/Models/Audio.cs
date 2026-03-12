@@ -65,6 +65,11 @@ public class AudioOptions
     /// Optional translation style (e.g., Faithful, Fluid, Creative) to influence the output.
     /// </summary>
     public TranslationStyle? Style { get; set; }
+    
+    /// <summary>
+    /// Optional voice gender (Male or Female) for the translated audio output.
+    /// </summary>
+    public VoiceGender? VoiceGender { get; set; }
 }
 
 /// <summary>

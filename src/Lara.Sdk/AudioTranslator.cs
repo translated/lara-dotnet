@@ -72,6 +72,8 @@ public class AudioTranslator
                 createParams["glossaries"] = options.Glossaries;
             if (options.Style.HasValue)
                 createParams["style"] = options.Style.Value.ToString().ToLowerInvariant();
+            if (options.VoiceGender.HasValue)
+                createParams["voice_gender"] = options.VoiceGender.Value.ToString().ToLowerInvariant();
         }
     
         var headers = new Dictionary<string, string>();
