@@ -24,8 +24,8 @@ public class LaraClient
 
     private readonly HttpClient _httpClient;
     private readonly Dictionary<string, string> _extraHeaders = new();
-    
-    public LaraClient(AccessKey accessKey, ClientOptions? options): this(options)
+
+    public LaraClient(AccessKey accessKey, ClientOptions? options) : this(options)
     {
         _accessKey = accessKey;
     }
@@ -38,33 +38,33 @@ public class LaraClient
     private LaraClient(ClientOptions? options)
     {
         options ??= new ClientOptions();
-        
+
         _httpClient = new HttpClient()
         {
             BaseAddress = new Uri(options.ServerUrl)
         };
-        
+
         _httpClient.DefaultRequestHeaders.Add("X-Lara-SDK-Name", "lara-dotnet");
         _httpClient.DefaultRequestHeaders.Add("X-Lara-SDK-Version", SdkVersion.Version);
     }
-    
+
     /// Sets an extra header to be included with all requests.
     public void SetExtraHeader(string name, string value)
     {
         _extraHeaders[name] = value;
     }
-    
+
     public async Task<T> Get<T>(string path, Dictionary<string, object>? queryParams = null, Dictionary<string, string>? headers = null)
     {
         if (queryParams?.Count > 0)
         {
-            var queryString = string.Join("&", queryParams.Select(kvp => 
+            var queryString = string.Join("&", queryParams.Select(kvp =>
                 $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value?.ToString() ?? "")}"));
             path = $"{path}?{queryString}";
         }
         return await Request<T>(HttpMethod.Get, path, null, null, headers);
     }
-    
+
     public async Task<T> Post<T>(string path, Dictionary<string, object>? parameters = null)
     {
         return await Request<T>(HttpMethod.Post, path, parameters, null, null);
@@ -75,7 +75,7 @@ public class LaraClient
         return await Request<T>(HttpMethod.Post, path, parameters, null, headers);
     }
     public async Task<T> Post<T>(
-        string path, 
+        string path,
         Dictionary<string, object>? parameters = null,
         Dictionary<string, Stream>? files = null,
         Dictionary<string, string>? headers = null
@@ -83,16 +83,16 @@ public class LaraClient
     {
         return await Request<T>(HttpMethod.Post, path, parameters, files, headers);
     }
-    
+
     public async Task<T> Put<T>(
-        string path, 
+        string path,
         Dictionary<string, object>? parameters = null,
         Dictionary<string, string>? headers = null
         )
     {
         return await Request<T>(HttpMethod.Put, path, parameters, null, headers);
     }
-    
+
     public async Task<T> Delete<T>(string path, Dictionary<string, object>? parameters = null,
         Dictionary<string, string>? headers = null)
     {
@@ -116,11 +116,11 @@ public class LaraClient
     {
         var request = new HttpRequestMessage(method, path);
         SetDateHeader(request);
-        
+
         // Add extra headers
         foreach (var kvp in _extraHeaders)
             request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
-        
+
         if (headers != null)
         {
             foreach (var kvp in headers)
@@ -128,11 +128,11 @@ public class LaraClient
                 request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
             }
         }
-        
+
         // Authentication
         var token = await Authenticate();
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        
+
         // Body
         if ((parameters?.Count > 0 || files?.Count > 0) && method != HttpMethod.Get)
         {
@@ -157,7 +157,7 @@ public class LaraClient
                         multipartContent.Add(stringContent, kvp.Key);
                     }
                 }
-                
+
                 foreach (var kvp in files)
                 {
                     var streamContent = new StreamContent(kvp.Value);
@@ -177,8 +177,8 @@ public class LaraClient
         }
 
         var response = await _httpClient.SendAsync(request);
-        
-        // Intercept 429 with "jwt expired" message to refresh token
+
+        // Intercept 401 Unauthorized with "jwt expired" message to refresh token
         if (!isRetry && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
             var errorBody = await response.Content.ReadAsStringAsync();
@@ -200,14 +200,26 @@ public class LaraClient
             var stream = await response.Content.ReadAsStreamAsync();
             return (T)(object)stream;
         }
-        
+
         if (response.Content.Headers.ContentLength == 0)
             return default!;
 
         var content = await response.Content.ReadAsStringAsync();
 
-        return JsonSerializer.Deserialize<T>(content, _jsonOptions)!;
+        return UnwrapContent<T>(content);
+    }
 
+    private T UnwrapContent<T>(string json)
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        var targetJson = root.ValueKind == JsonValueKind.Object
+                         && root.TryGetProperty("content", out var contentElement)
+            ? contentElement.GetRawText()
+            : json;
+
+        return JsonSerializer.Deserialize<T>(targetJson, _jsonOptions)!;
     }
 
     private async IAsyncEnumerable<T> RequestStream<T>(
@@ -271,10 +283,14 @@ public class LaraClient
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // Response may be wrapped in {data: {...}} or be direct {...}
-            var targetJson = root.TryGetProperty("data", out var dataElement)
-                ? dataElement.GetRawText()
-                : json;
+            // Response may be wrapped in {content: {...}}, or be direct {...}
+            JsonElement target;
+            if (root.TryGetProperty("content", out var contentElement))
+                target = contentElement;
+            else
+                target = root;
+
+            var targetJson = target.GetRawText();
 
             result = JsonSerializer.Deserialize<T>(targetJson, _jsonOptions);
             return result != null;
@@ -311,7 +327,7 @@ public class LaraClient
         // Sign request with HMAC-SHA256
         var signature = Sign(_accessKey.Secret, "POST", path, contentMd5, contentType, dateHeader);
         request.Headers.TryAddWithoutValidation("Authorization", $"Lara:{signature}");
-        
+
         var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
@@ -331,7 +347,7 @@ public class LaraClient
         _authToken = new AuthToken(authenticationResult.Token, refreshToken);
         return _authToken.Token;
     }
-    
+
     public async Task<string> Refresh()
     {
         if (_authToken == null || string.IsNullOrEmpty(_authToken.RefreshToken))
@@ -340,7 +356,7 @@ public class LaraClient
         var request = new HttpRequestMessage(HttpMethod.Post, "/v2/auth/refresh");
         SetDateHeader(request);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken.RefreshToken);
-        
+
         var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
@@ -360,7 +376,7 @@ public class LaraClient
         _authToken = new AuthToken(authenticationResult.Token, refreshToken);
         return _authToken.Token;
     }
-    
+
     private static void SetDateHeader(HttpRequestMessage request)
     {
         request.Headers.Date = DateTimeOffset.UtcNow;
