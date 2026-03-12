@@ -65,6 +65,11 @@ public class TranslateOptions
     [JsonPropertyName("reasoning")]
     public bool? Reasoning { get; set; }
 
+    /// Gets or sets optional metadata to attach to the translation request.
+    /// Can be a string or a structured object.
+    [JsonPropertyName("metadata")]
+    public object? Metadata { get; set; }
+
     /// Converts the options to HTTP parameters. Matches Java toParams() method.
     /// <returns>HTTP parameters for the request.</returns>
     public HttpParams<object> ToParams()
@@ -83,7 +88,8 @@ public class TranslateOptions
             .Set("no_trace", NoTrace)
             .Set("verbose", Verbose)
             .Set("style", Style?.ToString().ToLowerInvariant())
-            .Set("reasoning", Reasoning);
+            .Set("reasoning", Reasoning)
+            .Set("metadata", Metadata);
 
         return parameters;
     }
