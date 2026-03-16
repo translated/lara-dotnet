@@ -19,8 +19,12 @@ public class LaraClient
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    private AuthToken? _authToken;
+    private AuthToken? _initialAuthToken;
     private readonly AccessKey? _accessKey;
+
+    private string? _token;
+    private string? _refreshToken;
+    private readonly SemaphoreSlim _authSemaphore = new(1, 1);
 
     private readonly HttpClient _httpClient;
     private readonly Dictionary<string, string> _extraHeaders = new();
@@ -32,7 +36,7 @@ public class LaraClient
 
     public LaraClient(AuthToken authToken, ClientOptions? options) : this(options)
     {
-        _authToken = authToken;
+        _initialAuthToken = authToken;
     }
 
     private LaraClient(ClientOptions? options)
@@ -53,6 +57,10 @@ public class LaraClient
     {
         _extraHeaders[name] = value;
     }
+    
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Public HTTP Methods
+    // ─────────────────────────────────────────────────────────────────────────────
 
     public async Task<T> Get<T>(string path, Dictionary<string, object>? queryParams = null, Dictionary<string, string>? headers = null)
     {
@@ -105,6 +113,10 @@ public class LaraClient
         Dictionary<string, string>? headers = null
     ) => RequestStream<T>(HttpMethod.Post, path, parameters, headers);
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Request Handling
+    // ─────────────────────────────────────────────────────────────────────────────
+
     private async Task<T> Request<T>(
         HttpMethod method,
         string path,
@@ -114,6 +126,8 @@ public class LaraClient
         bool isRetry = false
     )
     {
+        await EnsureAuthenticated();
+
         var request = new HttpRequestMessage(method, path);
         SetDateHeader(request);
 
@@ -128,11 +142,9 @@ public class LaraClient
                 request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
             }
         }
-
-        // Authentication
-        var token = await Authenticate();
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
+        
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        
         // Body
         if ((parameters?.Count > 0 || files?.Count > 0) && method != HttpMethod.Get)
         {
@@ -177,16 +189,13 @@ public class LaraClient
         }
 
         var response = await _httpClient.SendAsync(request);
-
-        // Intercept 401 Unauthorized with "jwt expired" message to refresh token
+        
+        // Handle 401 - token expired, refresh and retry once
         if (!isRetry && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
-            var errorBody = await response.Content.ReadAsStringAsync();
-            if (errorBody.Contains("jwt expired"))
-            {
-                await Refresh();
-                return await Request<T>(method, path, parameters, files, headers, true);
-            }
+            _token = null;
+            await RefreshOrReauthenticate();
+            return await Request<T>(method, path, parameters, files, headers, true);
         }
 
         if (!response.IsSuccessStatusCode)
@@ -229,6 +238,8 @@ public class LaraClient
         Dictionary<string, string>? headers = null,
         bool isRetry = false)
     {
+        await EnsureAuthenticated();
+
         var request = new HttpRequestMessage(method, path);
         SetDateHeader(request);
 
@@ -238,16 +249,18 @@ public class LaraClient
             foreach (var kvp in headers)
                 request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
 
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", await Authenticate());
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
         if (parameters?.Count > 0 && method != HttpMethod.Get)
             request.Content = new StringContent(JsonSerializer.Serialize(parameters, _jsonOptions), Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
+        // Handle 401 - token expired, refresh and retry once
         if (!isRetry && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
-            await Refresh();
+            _token = null;
+            await RefreshOrReauthenticate();
             await foreach (var item in RequestStream<T>(method, path, parameters, headers, true))
                 yield return item;
             yield break;
@@ -302,13 +315,127 @@ public class LaraClient
         }
     }
 
-    private async Task<string> Authenticate()
-    {
-        if (_authToken != null)
-            return _authToken.Token;
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Authentication
+    // ─────────────────────────────────────────────────────────────────────────────
 
+    private bool IsTokenExpired(int bufferMs = 5_000)
+    {
+        if (string.IsNullOrEmpty(_token)) return true;
+        try
+        {
+            var parts = _token.Split('.');
+            if (parts.Length != 3) return true;
+
+            var base64 = parts[1]
+                .Replace('-', '+')
+                .Replace('_', '/');
+            switch (base64.Length % 4)
+            {
+                case 2: base64 += "=="; break;
+                case 3: base64 += "="; break;
+            }
+
+            var payload = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
+            using var doc = JsonDocument.Parse(payload);
+
+            if (!doc.RootElement.TryGetProperty("exp", out var expElement))
+                return true;
+
+            var exp = expElement.GetInt64();
+            var nowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            return exp * 1000 <= nowMs + bufferMs;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private async Task EnsureAuthenticated()
+    {
+        if (_token != null && !IsTokenExpired()) return;
+
+        await _authSemaphore.WaitAsync();
+        try
+        {
+            if (_token != null && !IsTokenExpired()) return;
+            _token = null;
+
+            // If we have a pre-existing auth token, consume it (one-shot)
+            if (_initialAuthToken != null)
+            {
+                _token = _initialAuthToken.Token;
+                _refreshToken = _initialAuthToken.RefreshToken;
+                _initialAuthToken = null;
+                return;
+            }
+
+            await DoRefreshOrReauthenticate();
+        }
+        finally
+        {
+            _authSemaphore.Release();
+        }
+    }
+
+    private async Task RefreshOrReauthenticate()
+    {
+        await _authSemaphore.WaitAsync();
+        try
+        {
+            await DoRefreshOrReauthenticate();
+        }
+        finally
+        {
+            _authSemaphore.Release();
+        }
+    }
+
+    private async Task DoRefreshOrReauthenticate()
+    {
+        if (!string.IsNullOrEmpty(_refreshToken))
+        {
+            try
+            {
+                await RefreshTokens();
+                return;
+            }
+            catch
+            {
+                _refreshToken = null;
+                if (_accessKey == null) throw;
+            }
+        }
+
+        if (_accessKey != null)
+        {
+            await AuthenticateWithAccessKey();
+            return;
+        }
+
+        throw new InvalidOperationException("No authentication method available for token renewal.");
+    }
+
+    private async Task RefreshTokens()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/v2/auth/refresh");
+        SetDateHeader(request);
+
+        foreach (var kvp in _extraHeaders)
+            request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _refreshToken);
+
+        var response = await _httpClient.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+        HandleAuthResponse(response, content);
+    }
+
+    private async Task AuthenticateWithAccessKey()
+    {
         if (_accessKey == null)
-            throw new InvalidOperationException("No AccessKey or Credentials available.");
+            throw new InvalidOperationException("No AccessKey available.");
 
         var path = "/v2/auth";
         var payload = new { id = _accessKey.Id };
@@ -324,59 +451,40 @@ public class LaraClient
         request.Headers.TryAddWithoutValidation("Date", dateHeader);
         request.Content.Headers.TryAddWithoutValidation("Content-MD5", contentMd5);
 
-        // Sign request with HMAC-SHA256
+        foreach (var kvp in _extraHeaders)
+            request.Headers.TryAddWithoutValidation(kvp.Key, kvp.Value);
+
         var signature = Sign(_accessKey.Secret, "POST", path, contentMd5, contentType, dateHeader);
         request.Headers.TryAddWithoutValidation("Authorization", $"Lara:{signature}");
 
         var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-
         var content = await response.Content.ReadAsStringAsync();
-        var authenticationResult = JsonSerializer.Deserialize<AuthenticationResult>(content, _jsonOptions)!;
-
-        if (authenticationResult == null || string.IsNullOrEmpty(authenticationResult.Token))
-            throw new Exception("Login Failed");
-
-        if (!response.Headers.TryGetValues("x-lara-refresh-token", out var refreshHeaderValues))
-            throw new Exception("Login Failed: missing x-lara-refresh-token header.");
-
-        var refreshToken = refreshHeaderValues.FirstOrDefault();
-        if (string.IsNullOrEmpty(refreshToken))
-            throw new Exception("Login Failed: empty x-lara-refresh-token header.");
-
-        _authToken = new AuthToken(authenticationResult.Token, refreshToken);
-        return _authToken.Token;
+        HandleAuthResponse(response, content);
     }
 
-    public async Task<string> Refresh()
+    private void HandleAuthResponse(HttpResponseMessage response, string content)
     {
-        if (_authToken == null || string.IsNullOrEmpty(_authToken.RefreshToken))
-            throw new InvalidOperationException("RefreshToken not available.");
+        if (!response.IsSuccessStatusCode)
+            throw new LaraApiException((int)response.StatusCode, "AuthenticationError", content);
 
-        var request = new HttpRequestMessage(HttpMethod.Post, "/v2/auth/refresh");
-        SetDateHeader(request);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken.RefreshToken);
+        var authResult = JsonSerializer.Deserialize<AuthenticationResult>(content, _jsonOptions);
+        if (authResult == null || string.IsNullOrEmpty(authResult.Token))
+            throw new LaraApiException(500, "AuthenticationError", "Missing token in authentication response.");
 
-        var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        _token = authResult.Token;
 
-        var content = await response.Content.ReadAsStringAsync();
-        var authenticationResult = JsonSerializer.Deserialize<AuthenticationResult>(content, _jsonOptions)!;
-
-        if (authenticationResult == null || string.IsNullOrEmpty(authenticationResult.Token))
-            throw new Exception("Failed to refresh auth token: missing token in body.");
-
-        if (!response.Headers.TryGetValues("x-lara-refresh-token", out var refreshHeaderValues))
-            throw new Exception("Failed to refresh auth token: missing x-lara-refresh-token header.");
-
-        var refreshToken = refreshHeaderValues.FirstOrDefault();
-        if (string.IsNullOrEmpty(refreshToken))
-            throw new Exception("Failed to refresh auth token: empty x-lara-refresh-token header.");
-
-        _authToken = new AuthToken(authenticationResult.Token, refreshToken);
-        return _authToken.Token;
+        if (response.Headers.TryGetValues("x-lara-refresh-token", out var refreshValues))
+        {
+            var newRefreshToken = refreshValues.FirstOrDefault();
+            if (!string.IsNullOrEmpty(newRefreshToken))
+                _refreshToken = newRefreshToken;
+        }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Helper Methods
+    // ─────────────────────────────────────────────────────────────────────────────
+    
     private static void SetDateHeader(HttpRequestMessage request)
     {
         request.Headers.Date = DateTimeOffset.UtcNow;
@@ -385,7 +493,6 @@ public class LaraClient
     /// Signs the request using HMAC-SHA256
     private static string Sign(string secret, string method, string path, string contentMd5, string contentType, string date)
     {
-        // Handle content type separator (remove charset info)
         var separator = contentType.IndexOf(';');
         if (separator > 0)
             contentType = contentType.Substring(0, separator).Trim();
