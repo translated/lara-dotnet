@@ -8,9 +8,9 @@ namespace Lara.Sdk;
 /// </summary>
 public class TextResult<T>
 {
-    
+
     public T Translation { get; }
-    
+
     public string ContentType { get; }
 
     public string SourceLanguage { get; }
@@ -22,7 +22,9 @@ public class TextResult<T>
     public object? AdaptedToMatches { get; }
 
     public object? GlossariesMatches { get; }
-    
+
+    public object? Profanities { get; }
+
     [Obsolete("Use the Translation property directly. This property will be removed in a future release.")]
     public string? SingleTranslation => Translation as string;
 
@@ -54,12 +56,13 @@ public class TextResult<T>
 
     [JsonConstructor]
     public TextResult(
-        string contentType, 
-        string sourceLanguage, 
-        List<string>? adaptedTo, 
-        List<string>? glossaries, 
-        object? adaptedToMatches, 
-        object? glossariesMatches, 
+        string contentType,
+        string sourceLanguage,
+        List<string>? adaptedTo,
+        List<string>? glossaries,
+        object? adaptedToMatches,
+        object? glossariesMatches,
+        object? profanities,
         T translation)
     {
         ContentType = contentType;
@@ -68,6 +71,7 @@ public class TextResult<T>
         Glossaries = glossaries;
         AdaptedToMatches = adaptedToMatches;
         GlossariesMatches = glossariesMatches;
+        Profanities = profanities;
         Translation = translation;
     }
 }

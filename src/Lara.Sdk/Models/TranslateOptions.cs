@@ -70,6 +70,10 @@ public class TranslateOptions
     [JsonPropertyName("metadata")]
     public object? Metadata { get; set; }
 
+    /// Gets or sets the profanity filter.
+    [JsonPropertyName("profanity_filter")]
+    public ProfanityFilter? ProfanityFilter { get; set; }
+
     /// Converts the options to HTTP parameters. Matches Java toParams() method.
     /// <returns>HTTP parameters for the request.</returns>
     public HttpParams<object> ToParams()
@@ -89,7 +93,8 @@ public class TranslateOptions
             .Set("verbose", Verbose)
             .Set("style", Style?.ToString().ToLowerInvariant())
             .Set("reasoning", Reasoning)
-            .Set("metadata", Metadata);
+            .Set("metadata", Metadata)
+            .Set("profanity_filter", ProfanityFilter?.ToString().ToLowerInvariant());
 
         return parameters;
     }

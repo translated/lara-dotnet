@@ -164,7 +164,38 @@ namespace Lara.SDK.Examples
                 return;
             }
 
-            // Example 7: Get available languages
+            // Example 7: Profanity filter options
+            Console.WriteLine("=== Translation with Profanity Filter Options ===");
+            try
+            {
+                var profanityText = "Don't be such a tool.";
+                var detectResult = await lara.Translate(profanityText, "en-US", "it-IT", new TranslateOptions
+                {
+                    ProfanityFilter = Sdk.ProfanityFilter.Detect,
+                    Verbose = true
+                });
+                var hideResult = await lara.Translate(profanityText, "en-US", "it-IT", new TranslateOptions
+                {
+                    ProfanityFilter = Sdk.ProfanityFilter.Hide,
+                    Verbose = true
+                });
+                var avoidResult = await lara.Translate(profanityText, "en-US", "it-IT", new TranslateOptions
+                {
+                    ProfanityFilter = Sdk.ProfanityFilter.Avoid,
+                    Verbose = true
+                });
+                Console.WriteLine($"Original: {profanityText}");
+                Console.WriteLine($"Detect mode translation: {detectResult.Translation}");
+                Console.WriteLine($"Hide mode translation: {hideResult.Translation}");
+                Console.WriteLine($"Avoid mode translation: {avoidResult.Translation}\n");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error with profanity filter translation: {e.Message}\n");
+                return;
+            }
+
+            // Example 8: Get available languages
             Console.WriteLine("=== Available Languages ===");
             try
             {
@@ -184,7 +215,7 @@ namespace Lara.SDK.Examples
                 return;
             }
             
-            // Example 8: Detect language of a given text
+            // Example 9: Detect language of a given text
             Console.WriteLine("=== Language Detection ===");
             try
             {
@@ -198,7 +229,7 @@ namespace Lara.SDK.Examples
                 return;
             }
             
-            // Example 9: Detect language of a given text
+            // Example 10: Detect language of a given text
             Console.WriteLine("=== Language Detection with hint and passlist ===");
             try
             {
@@ -212,7 +243,7 @@ namespace Lara.SDK.Examples
                 return;
             }
 
-            // Example 10: Translation with Lara Think (reasoning mode with streaming)
+            // Example 11: Translation with Lara Think (reasoning mode with streaming)
             Console.WriteLine("\n=== Translation with Lara Think (Reasoning Mode) ===");
             try
             {
