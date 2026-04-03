@@ -47,7 +47,7 @@ public class Translator
         var response = await Client.Get<List<string>>("/v2/languages");
         return response;
     }
-    
+
     /// Translates text with options. If source is null, the API will attempt to auto-detect the source language.
     [Obsolete("Use Translate<T> directly. This overload will be removed in v2.0.")]
     public async Task<TextResult<string>> Translate(string text, string? source, string target, TranslateOptions? options = null)
@@ -142,7 +142,7 @@ public class Translator
 
         return lastResult;
     }
-    
+
     /// Detects the language of the given text.
     /// <param name="text">The text content to detect</param>
     /// <param name="hint">An hint for the detection</param>
@@ -159,8 +159,23 @@ public class Translator
         {
             parameters.Set("passlist", passlist);
         }
-    
-        var response = await Client.Post<DetectResult>("/v2/detect", parameters.Build());
+
+        var response = await Client.Post<DetectResult>("/v2/detect/language", parameters.Build());
+        return response;
+    }
+
+    /// Detects profanities in the given text.
+    /// <param name="text">The text content to analyze.</param>
+    /// <param name="language">The language code of the input text.</param>
+    /// <param name="contentType">The content type used for profanity detection.</param>
+    /// <returns>The profanity detection result.</returns>
+    public async Task<ProfanityDetectResult> DetectProfanities(string text, string language, string contentType)
+    {
+        var parameters = new HttpParams<object>()
+            .Set("text", text)
+            .Set("language", language)
+            .Set("content_type", contentType);
+        var response = await Client.Post<ProfanityDetectResult>("/v2/detect/profanities", parameters.Build());
         return response;
     }
 }
