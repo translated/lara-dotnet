@@ -215,20 +215,7 @@ public class LaraClient
 
         var content = await response.Content.ReadAsStringAsync();
 
-        return UnwrapContent<T>(content);
-    }
-
-    private T UnwrapContent<T>(string json)
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        var targetJson = root.ValueKind == JsonValueKind.Object
-                         && root.TryGetProperty("content", out var contentElement)
-            ? contentElement.GetRawText()
-            : json;
-
-        return JsonSerializer.Deserialize<T>(targetJson, _jsonOptions)!;
+        return JsonSerializer.Deserialize<T>(content, _jsonOptions)!;
     }
 
     private async IAsyncEnumerable<T> RequestStream<T>(

@@ -18,6 +18,9 @@ public class Translator
     /// Gets the glossaries service for managing translation glossaries.
     public readonly Glossaries Glossaries;
 
+    /// Gets the styleguides service for managing styleguides.
+    public readonly Styleguides Styleguides;
+
     /// Gets the images service for managing image translations.
     public readonly ImageTranslator Images;
 
@@ -37,6 +40,7 @@ public class Translator
         Memories = new Memories(Client);
         Documents = new Documents(Client);
         Glossaries = new Glossaries(Client);
+        Styleguides = new Styleguides(Client);
         Images = new ImageTranslator(Client);
         Audio = new AudioTranslator(Client);
     }

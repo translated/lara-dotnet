@@ -74,6 +74,18 @@ public class TranslateOptions
     [JsonPropertyName("profanity_filter")]
     public ProfanityFilter? ProfanityFilter { get; set; }
 
+    /// Gets or sets the styleguide ID to apply during translation.
+    [JsonPropertyName("styleguide_id")]
+    public string? StyleguideId { get; set; }
+
+    /// Gets or sets a value indicating whether to enable styleguide reasoning.
+    [JsonPropertyName("styleguide_reasoning")]
+    public bool? StyleguideReasoning { get; set; }
+
+    /// Gets or sets the language for styleguide change explanations.
+    [JsonPropertyName("styleguide_explanation_language")]
+    public string? StyleguideExplanationLanguage { get; set; }
+
     /// Converts the options to HTTP parameters. Matches Java toParams() method.
     /// <returns>HTTP parameters for the request.</returns>
     public HttpParams<object> ToParams()
@@ -94,7 +106,10 @@ public class TranslateOptions
             .Set("style", Style?.ToString().ToLowerInvariant())
             .Set("reasoning", Reasoning)
             .Set("metadata", Metadata)
-            .Set("profanity_filter", ProfanityFilter?.ToString().ToLowerInvariant());
+            .Set("profanity_filter", ProfanityFilter?.ToString().ToLowerInvariant())
+            .Set("styleguide_id", StyleguideId)
+            .Set("styleguide_reasoning", StyleguideReasoning)
+            .Set("styleguide_explanation_language", StyleguideExplanationLanguage);
 
         return parameters;
     }
