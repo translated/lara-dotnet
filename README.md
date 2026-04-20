@@ -83,6 +83,7 @@ export LARA_ACCESS_KEY_SECRET="your-access-key-secret"
   - Auto-detect source language
   - Advanced translation options
   - Get available languages
+  - Quality estimation
   - Detect language
 
 ```bash

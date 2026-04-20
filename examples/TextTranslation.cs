@@ -16,6 +16,7 @@ namespace Lara.SDK.Examples
      * - Auto-detect source language
      * - Advanced translation options
      * - Get available languages
+     * - Translation quality estimation for single and multiple sentence pairs
      */
     public static class TextTranslation
     {
@@ -195,7 +196,46 @@ namespace Lara.SDK.Examples
                 return;
             }
 
-            // Example 8: Get available languages
+            // Example 8: Quality estimation for a single sentence pair
+            Console.WriteLine("=== Quality Estimation (Single Sentence) ===");
+            try
+            {
+                var sentence = "Hello, how are you?";
+                var translation = "Ciao, come stai?";
+                var result = await lara.QualityEstimation("en-US", "it-IT", sentence, translation);
+                Console.WriteLine($"Source: {sentence}");
+                Console.WriteLine($"Translation: {translation}");
+                Console.WriteLine($"Quality score: {result.Score}\n");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error estimating translation quality: {e.Message}\n");
+                return;
+            }
+
+            // Example 9: Quality estimation for multiple sentence pairs
+            Console.WriteLine("=== Quality Estimation (Multiple Sentences) ===");
+            try
+            {
+                var sentences = new string[] { "Hello, how are you?", "The weather is nice today." };
+                var translations = new string[] { "Ciao, come stai?", "Il tempo e bello oggi." };
+                var results = await lara.QualityEstimation("en-US", "it-IT", sentences, translations);
+                for (int i = 0; i < results.Length; i++)
+                {
+                    Console.WriteLine($"Pair {i + 1}:");
+                    Console.WriteLine($"  Source: {sentences[i]}");
+                    Console.WriteLine($"  Translation: {translations[i]}");
+                    Console.WriteLine($"  Quality score: {results[i].Score}");
+                }
+                Console.WriteLine();
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error estimating multiple translation qualities: {e.Message}\n");
+                return;
+            }
+
+            // Example 10: Get available languages
             Console.WriteLine("=== Available Languages ===");
             try
             {
@@ -215,7 +255,7 @@ namespace Lara.SDK.Examples
                 return;
             }
             
-            // Example 9: Detect language of a given text
+            // Example 11: Detect language of a given text
             Console.WriteLine("=== Language Detection ===");
             try
             {
@@ -229,7 +269,7 @@ namespace Lara.SDK.Examples
                 return;
             }
             
-            // Example 10: Detect language of a given text
+            // Example 12: Detect language of a given text
             Console.WriteLine("=== Language Detection with hint and passlist ===");
             try
             {
@@ -243,7 +283,7 @@ namespace Lara.SDK.Examples
                 return;
             }
 
-            // Example 11: Translation with Lara Think (reasoning mode with streaming)
+            // Example 13: Translation with Lara Think (reasoning mode with streaming)
             Console.WriteLine("\n=== Translation with Lara Think (Reasoning Mode) ===");
             try
             {

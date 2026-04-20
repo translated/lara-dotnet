@@ -182,4 +182,48 @@ public class Translator
         var response = await Client.Post<ProfanityDetectResult>("/v2/detect/profanities", parameters.Build());
         return response;
     }
+
+    /// Estimates the quality of a translated sentence.
+    /// <param name="source">The source language code.</param>
+    /// <param name="target">The target language code.</param>
+    /// <param name="sentence">The source sentence to evaluate.</param>
+    /// <param name="translation">The translated sentence to evaluate.</param>
+    /// <returns>The quality estimation result for the provided sentence pair.</returns>
+    public async Task<QualityEstimationResult> QualityEstimation(string source, string target, string sentence, string translation)
+    {
+        return await QualityEstimation<string, QualityEstimationResult>(source, target, sentence, translation);
+    }
+
+    /// Estimates the quality of multiple translated sentences.
+    /// <param name="source">The source language code.</param>
+    /// <param name="target">The target language code.</param>
+    /// <param name="sentences">The source sentences to evaluate.</param>
+    /// <param name="translations">The translated sentences to evaluate. Must contain the same number of items as <paramref name="sentences"/>.</param>
+    /// <returns>The quality estimation results for each provided sentence pair.</returns>
+    public async Task<QualityEstimationResult[]> QualityEstimation(string source, string target, string[] sentences, string[] translations)
+    {
+        return await QualityEstimation<string[], QualityEstimationResult[]>(source, target, sentences, translations);
+    }
+
+    /// Estimates the quality of multiple translated sentences.
+    /// <param name="source">The source language code.</param>
+    /// <param name="target">The target language code.</param>
+    /// <param name="sentences">The source sentences to evaluate.</param>
+    /// <param name="translations">The translated sentences to evaluate. Must contain the same number of items as <paramref name="sentences"/>.</param>
+    /// <returns>The quality estimation results for each provided sentence pair.</returns>
+    public async Task<List<QualityEstimationResult>> QualityEstimation(string source, string target, List<string> sentences, List<string> translations)
+    {
+        return await QualityEstimation<List<string>, List<QualityEstimationResult>>(source, target, sentences, translations);
+    }
+
+    private async Task<TResult> QualityEstimation<TInput, TResult>(string source, string target, TInput s, TInput t)
+    {
+        var parameters = new HttpParams<object>()
+            .Set("source", source)
+            .Set("target", target)
+            .Set("sentence", s)
+            .Set("translation", t);
+        var response = await Client.Post<TResult>("/v2/detect/quality-estimation", parameters.Build());
+        return response;
+    }
 }
