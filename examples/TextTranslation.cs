@@ -165,34 +165,30 @@ namespace Lara.SDK.Examples
                 return;
             }
 
-            // Example 7: Profanity filter options
-            Console.WriteLine("=== Translation with Profanity Filter Options ===");
+            // Example 7: Profanities detection and handling options
+            Console.WriteLine("=== Translation with Profanities Options ===");
             try
             {
                 var profanityText = "Don't be such a tool.";
                 var detectResult = await lara.Translate(profanityText, "en-US", "it-IT", new TranslateOptions
                 {
-                    ProfanityFilter = Sdk.ProfanityFilter.Detect,
+                    ProfanitiesDetect = Sdk.ProfanitiesDetect.SourceTarget,
+                    ProfanitiesHandling = Sdk.ProfanitiesHandling.Detect,
                     Verbose = true
                 });
                 var hideResult = await lara.Translate(profanityText, "en-US", "it-IT", new TranslateOptions
                 {
-                    ProfanityFilter = Sdk.ProfanityFilter.Hide,
-                    Verbose = true
-                });
-                var avoidResult = await lara.Translate(profanityText, "en-US", "it-IT", new TranslateOptions
-                {
-                    ProfanityFilter = Sdk.ProfanityFilter.Avoid,
+                    ProfanitiesDetect = Sdk.ProfanitiesDetect.Target,
+                    ProfanitiesHandling = Sdk.ProfanitiesHandling.Hide,
                     Verbose = true
                 });
                 Console.WriteLine($"Original: {profanityText}");
                 Console.WriteLine($"Detect mode translation: {detectResult.Translation}");
                 Console.WriteLine($"Hide mode translation: {hideResult.Translation}");
-                Console.WriteLine($"Avoid mode translation: {avoidResult.Translation}\n");
             }
             catch (LaraException e)
             {
-                Console.WriteLine($"Error with profanity filter translation: {e.Message}\n");
+                Console.WriteLine($"Error with profanities translation: {e.Message}\n");
                 return;
             }
 

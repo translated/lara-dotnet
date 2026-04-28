@@ -70,9 +70,13 @@ public class TranslateOptions
     [JsonPropertyName("metadata")]
     public object? Metadata { get; set; }
 
-    /// Gets or sets the profanity filter.
-    [JsonPropertyName("profanity_filter")]
-    public ProfanityFilter? ProfanityFilter { get; set; }
+    /// Gets or sets the profanities detection scope.
+    [JsonPropertyName("profanities_detect")]
+    public ProfanitiesDetect? ProfanitiesDetect { get; set; }
+
+    /// Gets or sets the profanities handling mode.
+    [JsonPropertyName("profanities_handling")]
+    public ProfanitiesHandling? ProfanitiesHandling { get; set; }
 
     /// Gets or sets the styleguide ID to apply during translation.
     [JsonPropertyName("styleguide_id")]
@@ -106,7 +110,13 @@ public class TranslateOptions
             .Set("style", Style?.ToString().ToLowerInvariant())
             .Set("reasoning", Reasoning)
             .Set("metadata", Metadata)
-            .Set("profanity_filter", ProfanityFilter?.ToString().ToLowerInvariant())
+            .Set("profanities_detect", ProfanitiesDetect switch
+            {
+                Sdk.ProfanitiesDetect.Target => "target",
+                Sdk.ProfanitiesDetect.SourceTarget => "source_target",
+                _ => null
+            })
+            .Set("profanities_handling", ProfanitiesHandling?.ToString().ToLowerInvariant())
             .Set("styleguide_id", StyleguideId)
             .Set("styleguide_reasoning", StyleguideReasoning)
             .Set("styleguide_explanation_language", StyleguideExplanationLanguage);

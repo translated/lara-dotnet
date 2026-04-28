@@ -23,7 +23,7 @@ public class TextResult<T>
 
     public object? GlossariesMatches { get; }
 
-    public object? Profanities { get; }
+    public ProfanitiesResult? Profanities { get; }
 
     public StyleguideResults<T>? StyleguideResults { get; }
 
@@ -64,7 +64,7 @@ public class TextResult<T>
         List<string>? glossaries,
         object? adaptedToMatches,
         object? glossariesMatches,
-        object? profanities,
+        ProfanitiesResult? profanities,
         StyleguideResults<T>? styleguideResults,
         T translation)
     {

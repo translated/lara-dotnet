@@ -28,10 +28,13 @@ public class ProfanityDetectResult
 
     public ProfanityMatch[] Profanities { get; }
 
+    public string? Error { get; }
+
     [JsonConstructor]
-    public ProfanityDetectResult(string maskedText, ProfanityMatch[] profanities)
+    public ProfanityDetectResult(string maskedText, ProfanityMatch[] profanities, string? error = null)
     {
         MaskedText = maskedText;
         Profanities = profanities;
+        Error = error;
     }
 }
