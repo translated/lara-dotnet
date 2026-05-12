@@ -283,14 +283,7 @@ public class LaraClient
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
-            // Response may be wrapped in {content: {...}}, or be direct {...}
-            JsonElement target;
-            if (root.TryGetProperty("content", out var contentElement))
-                target = contentElement;
-            else
-                target = root;
-
-            var targetJson = target.GetRawText();
+            var targetJson = root.GetRawText();
 
             result = JsonSerializer.Deserialize<T>(targetJson, _jsonOptions);
             return result != null;

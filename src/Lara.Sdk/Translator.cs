@@ -130,7 +130,7 @@ public class Translator
 
         TextResult<T>? lastResult = null;
 
-        await foreach (var partial in Client.PostAndGetStream<TextResult<T>>("/translate", parameters.Build(), headers.Count > 0 ? headers : null))
+        await foreach (var partial in Client.PostAndGetStream<TextResult<T>>("/v2/translate", parameters.Build(), headers.Count > 0 ? headers : null))
         {
             if (options?.Reasoning == true && callback != null)
             {
