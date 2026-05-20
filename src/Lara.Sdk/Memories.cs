@@ -75,24 +75,38 @@ public class Memories
         return await _client.Post<List<Memory>>("/v2/memories/connect", parameters.Build());
     }
     
-    /// Imports a TMX file 
-    public async Task<MemoryImport> ImportTmx(string id, string tmxFilePath, bool? gzip = null)
+    /// Imports a TMX file, optionally registering a callback URL for completion notification
+    public async Task<MemoryImport> ImportTmx(string id, string tmxFilePath, bool? gzip = null, string? callbackUrl = null)
     {
         var parameters = new HttpParams<object>();
         if (gzip ?? tmxFilePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
         {
             parameters.Set("compression", "gzip");
         }
-    
+        if (callbackUrl != null)
+        {
+            parameters.Set("callback_url", callbackUrl);
+        }
+
         await using var fileStream = File.OpenRead(tmxFilePath);
         var files = new Dictionary<string, Stream> { ["tmx"] = fileStream };
         return await _client.Post<MemoryImport>($"/v2/memories/{id}/import", parameters.Build(), files);
     }
-    
+
     /// Gets import status
     public async Task<MemoryImport> GetImportStatus(string id)
     {
         return await _client.Get<MemoryImport>($"/v2/memories/imports/{id}");
+    }
+
+    /// Starts an asynchronous export of a memory and returns the export job ID.
+    public async Task<MemoryExport> ExportAsync(string id, string callbackUrl, MemoryExportFormat? format = null)
+    {
+        var queryParams = new HttpParams<object>()
+            .Set("callback_url", callbackUrl)
+            .Set("format", format?.ToString())
+            .Build();
+        return await _client.Get<MemoryExport>($"/v2/memories/{id}/export/async", queryParams);
     }
     
     /// Waits for import to complete
@@ -226,6 +240,6 @@ public class Memories
         if (sentenceAfter != null)
             parameters.Set("sentence_after", sentenceAfter);
     
-        return await _client.Delete<MemoryImport>("/memories/content", parameters.Build());
+        return await _client.Delete<MemoryImport>("/v2/memories/content", parameters.Build());
     }
 }

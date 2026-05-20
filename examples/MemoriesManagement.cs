@@ -13,7 +13,8 @@ namespace Lara.SDK.Examples
      * - Create, list, update, delete memories
      * - Add individual translations
      * - Multiple memory operations
-     * - TMX file import with progress monitoring
+     * - TMX file import with progress monitoring and callback URLs
+     * - Asynchronous memory export with callback URLs
      * - Translation deletion
      * - Translation with TUID and context
      */
@@ -45,6 +46,7 @@ namespace Lara.SDK.Examples
         {
             string? memoryId = null;
             string? memory2ToDelete = null;
+            const string callbackUrl = "https://your-server.example.com/lara/webhook";
 
             // Example 1: Basic memory management
             Console.WriteLine("=== Basic Memory Management ===");
@@ -137,6 +139,17 @@ namespace Lara.SDK.Examples
                     Console.WriteLine($"Import started with ID: {import.Id}");
                     Console.WriteLine($"Initial progress: {import.Progress * 100}%");
 
+                    // Import with a callback URL: your webhook endpoint receives a notification
+                    // when the import finishes (success or error). The method still returns
+                    // immediately with the import job, so you can also poll if you need to.
+                    var importWithCallback = await lara.Memories.ImportTmx(
+                        memoryId!,
+                        tmxFilePath,
+                        gzip: tmxFilePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase),
+                        callbackUrl: callbackUrl);
+                    Console.WriteLine($"Import with callback started with ID: {importWithCallback.Id}");
+                    Console.WriteLine($"Callback will be sent to: {callbackUrl}");
+
                     // Wait for import to complete
                     try
                     {
@@ -164,7 +177,19 @@ namespace Lara.SDK.Examples
                 Console.WriteLine($"TMX file not found: {tmxFilePath}");
             }
 
-            // Example 5: Translation deletion
+            // Example 5: Async memory export
+            Console.WriteLine("=== Async Memory Export ===");
+            try
+            {
+                var export = await lara.Memories.ExportAsync(memoryId!, callbackUrl);
+                Console.WriteLine($"Export started with job ID: {export.JobId}\n");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error starting async export: {e.Message}\n");
+            }
+
+            // Example 6: Translation deletion
             Console.WriteLine("=== Translation Deletion ===");
             try
             {

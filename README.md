@@ -129,7 +129,8 @@ dotnet run -- audio-translation
   - Create, list, update, delete memories
   - Add individual translations
   - Multiple memory operations
-  - TMX file import with progress monitoring
+  - TMX file import with progress monitoring and callback URLs
+  - Asynchronous memory export with callback URLs
   - Translation deletion
   - Translation with TUID and context
 
@@ -337,6 +338,28 @@ var memoryImport = await lara.Memories.AddTranslation(
 // TMX import from file
 var tmxFilePath = "/path/to/your/memory.tmx";  // Replace with actual TMX file path
 var memoryImport = await lara.Memories.ImportTmx("mem_1A2b3C4d5E6f7G8h9I0jKl", tmxFilePath);
+
+// TMX import with a callback URL
+var memoryImportWithCallback = await lara.Memories.ImportTmx(
+    "mem_1A2b3C4d5E6f7G8h9I0jKl",
+    tmxFilePath,
+    callbackUrl: "https://example.com/webhooks/lara-memory-import"
+);
+
+// TMX import with gzip compression and a callback URL
+var compressedMemoryImport = await lara.Memories.ImportTmx(
+    "mem_1A2b3C4d5E6f7G8h9I0jKl",
+    "/path/to/your/memory.tmx.gz",
+    gzip: true,
+    callbackUrl: "https://example.com/webhooks/lara-memory-import"
+);
+
+// Start an asynchronous memory export; Lara will notify the callback URL when ready
+var memoryExport = await lara.Memories.ExportAsync(
+    "mem_1A2b3C4d5E6f7G8h9I0jKl",
+    "https://example.com/webhooks/lara-memory-export"
+);
+Console.WriteLine($"Export job ID: {memoryExport.JobId}");
 
 // Delete translation
 // Important: if you omit tuid, all entries that match the provided fields will be removed
