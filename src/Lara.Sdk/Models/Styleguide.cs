@@ -23,6 +23,9 @@ public class Styleguide
     /// Gets the date and time when the styleguide was last updated.
     public DateTime UpdatedAt { get; }
 
+    /// Gets the isPersonal property.
+    public bool IsPersonal { get; }
+
     [JsonConstructor]
     public Styleguide(
         string id,
@@ -30,7 +33,8 @@ public class Styleguide
         string? content,
         string ownerId,
         DateTime createdAt,
-        DateTime updatedAt)
+        DateTime updatedAt,
+        bool isPersonal)
     {
         Id = id;
         Name = name;
@@ -38,6 +42,7 @@ public class Styleguide
         OwnerId = ownerId;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
+        IsPersonal = isPersonal;
     }
 
     public override string ToString()

@@ -27,6 +27,9 @@ public class Glossary
     /// Gets the owner ID of the glossary.
     public string OwnerId { get; }
 
+    /// Gets the isPersonal property.
+    public bool IsPersonal { get; }
+
     /// Initializes a new instance of the Glossary class.
     [JsonConstructor]
     public Glossary(
@@ -34,7 +37,8 @@ public class Glossary
         DateTime createdAt, 
         DateTime updatedAt, 
         string name, 
-        string ownerId
+        string ownerId,
+        bool isPersonal
         )
     {
         Id = id;
@@ -42,6 +46,7 @@ public class Glossary
         UpdatedAt = updatedAt;
         Name = name;
         OwnerId = ownerId;
+        IsPersonal = isPersonal;
     }
 
     /// Gets the unique identifier for the glossary.

@@ -32,6 +32,9 @@ public class Memory
     /// Gets the number of collaborators with access to this memory.
     public int CollaboratorsCount { get; }
 
+    /// Gets the isPersonal property.
+    public bool IsPersonal { get; }
+
     /// Initializes a new instance of the Memory class.
     [JsonConstructor]
     public Memory(
@@ -43,7 +46,8 @@ public class Memory
         string? externalId, 
         string? secret, 
         string ownerId, 
-        int collaboratorsCount)
+        int collaboratorsCount,
+        bool isPersonal)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -54,6 +58,7 @@ public class Memory
         Secret = secret;
         OwnerId = ownerId;
         CollaboratorsCount = collaboratorsCount;
+        IsPersonal = isPersonal;
     }
 
     /// Gets the unique identifier for the memory.
