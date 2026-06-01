@@ -22,9 +22,9 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>translation;machine-translation;mt;api;sdk;dotnet;csharp;multilingual;localization</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.4.1</Version>
-    <AssemblyVersion>1.4.1.0</AssemblyVersion>
-    <FileVersion>1.4.1.0</FileVersion>
+    <Version>1.5.0</Version>
+    <AssemblyVersion>1.5.0.0</AssemblyVersion>
+    <FileVersion>1.5.0.0</FileVersion>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
