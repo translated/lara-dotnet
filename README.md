@@ -263,7 +263,7 @@ var imagePath = "/path/to/your/image.png";  // Replace with actual file path
 // Translate image and receive a translated image stream
 var translatedImageStream = await lara.Images.Translate(imagePath, "en", "fr", new ImageTranslateOptions
 {
-    TextRemoval = ImageTextRemoval.Inpainting,
+    Model = ImageTranslationModel.Inpainting,
     Style = TranslationStyle.Faithful
 });
 

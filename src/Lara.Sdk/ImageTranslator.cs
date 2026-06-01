@@ -17,7 +17,14 @@ public class ImageTranslator
     }
 
     /// <summary>
-    /// Translates an image by overlaying translated text.
+    /// Translates an image.
+    /// The available models for text rendering are:
+    /// <list type="bullet">
+    /// <item><c>overlay</c></item>
+    /// <item><c>inpainting</c></item>
+    /// <item><c>generative</c></item>
+    /// <item><c>generative_fast</c></item>
+    /// </list>
     /// </summary>
     /// <param name="imagePath">The path to the image file to translate.</param>
     /// <param name="source">The source language code, or null for auto-detection.</param>
@@ -38,7 +45,7 @@ public class ImageTranslator
         parameters.Set("target", target)
             .Set("source", source)
             .Set("style", options?.Style?.ToString().ToLowerInvariant())
-            .Set("text_removal", options?.TextRemoval?.ToString().ToLowerInvariant())
+            .Set("model", SerializeModel(options))
             .Set("adapt_to", options?.AdaptTo)
             .Set("glossaries", options?.Glossaries);
     
@@ -84,5 +91,24 @@ public class ImageTranslator
         }
     
         return await _client.Post<ImageTextResult>("/v2/images/translate-text", parameters.Build(), files, headers);
+    }
+
+    private static string? SerializeModel(ImageTranslateOptions? options)
+    {
+        if (options?.Model is { } model)
+        {
+            return model switch
+            {
+                ImageTranslationModel.Overlay => "overlay",
+                ImageTranslationModel.Inpainting => "inpainting",
+                ImageTranslationModel.Generative => "generative",
+                ImageTranslationModel.GenerativeFast => "generative_fast",
+                _ => null
+            };
+        }
+
+#pragma warning disable CS0618
+        return options?.TextRemoval?.ToString().ToLowerInvariant();
+#pragma warning restore CS0618
     }
 }

@@ -28,5 +28,13 @@ public class ImageTranslateOptions
     /// <summary>
     /// Configures how source text is removed or hidden from the image during translation.
     /// </summary>
+    [System.Obsolete("Use Model with ImageTranslationModel instead.")]
+#pragma warning disable CS0618
     public ImageTextRemoval? TextRemoval { get; set; }
+#pragma warning restore CS0618
+
+    /// <summary>
+    /// Specifies the model used to translate text within the image.
+    /// </summary>
+    public ImageTranslationModel? Model { get; set; }
 }

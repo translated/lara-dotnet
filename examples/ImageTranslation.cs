@@ -54,7 +54,7 @@ namespace Lara.SDK.Examples
             {
                 var options = new ImageTranslateOptions
                 {
-                    TextRemoval = ImageTextRemoval.Overlay
+                    Model = ImageTranslationModel.Overlay
                 };
 
                 var translatedStream = await lara.Images.Translate(sampleFilePath, sourceLang, targetLang, options);
@@ -83,7 +83,7 @@ namespace Lara.SDK.Examples
                     AdaptTo = new[] { "mem_1A2b3C4d5E6f7G8h9I0jKl" },  // Replace with actual memory IDs
                     Glossaries = new[] { "gls_1A2b3C4d5E6f7G8h9I0jKl" },  // Replace with actual glossary IDs
                     Style = TranslationStyle.Faithful,
-                    TextRemoval = ImageTextRemoval.Inpainting
+                    Model = ImageTranslationModel.Inpainting
                 };
 
                 var translatedStream = await lara.Images.Translate(sampleFilePath, sourceLang, targetLang, options);

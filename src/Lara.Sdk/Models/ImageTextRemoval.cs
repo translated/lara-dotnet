@@ -3,6 +3,7 @@ namespace Lara.Sdk;
 /// <summary>
 /// Defines the strategy used to remove or hide text that appears in an image.
 /// </summary>
+[System.Obsolete("Use ImageTranslationModel instead.")]
 public enum ImageTextRemoval
 {
     /// <summary>
