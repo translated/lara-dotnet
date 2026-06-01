@@ -28,4 +28,28 @@ public class Styleguides
             return null;
         }
     }
+
+    /// Creates a new styleguide with a name and content.
+    public async Task<Styleguide> Create(string name, string content)
+    {
+        var parameters = new HttpParams<object>()
+            .Set("name", name)
+            .Set("content", content);
+        return await _client.Post<Styleguide>("/v2/styleguides", parameters.Build());
+    }
+
+    /// Updates a styleguide. Pass null for fields you don't want to change.
+    public async Task<Styleguide> Update(string id, string? name = null, string? content = null)
+    {
+        var parameters = new HttpParams<object>();
+        if (name != null) parameters.Set("name", name);
+        if (content != null) parameters.Set("content", content);
+        return await _client.Put<Styleguide>($"/v2/styleguides/{id}", parameters.Build());
+    }
+
+    /// Deletes a specific styleguide.
+    public async Task<Styleguide> Delete(string id)
+    {
+        return await _client.Delete<Styleguide>($"/v2/styleguides/{id}");
+    }
 }

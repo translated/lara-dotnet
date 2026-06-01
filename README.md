@@ -14,6 +14,7 @@ All major translation features are accessible, making it easy to integrate and c
 - **Audio Translation**: Audio file translation with status monitoring
 - **Translation Memory**: Store and reuse translations for consistency
 - **Glossaries**: Enforce terminology standards across translations
+- **Styleguides**: Define tone, voice, and writing style rules for translations
 - **Language Detection**: Automatic source language identification
 - **Advanced Options**: Translation instructions and more
 
@@ -150,6 +151,17 @@ dotnet run -- memories-management
 ```bash
 cd examples
 dotnet run -- glossaries-management
+```
+
+### Styleguide Management
+- **[StyleguideManagement.cs](examples/StyleguideManagement.cs)** - Styleguide management examples
+  - Create, list, get, update, delete styleguides
+  - Update name, content, or both at once
+  - Handling of non-existent styleguides
+
+```bash
+cd examples
+dotnet run -- styleguides-management
 ```
 
 ## 🔧 API Reference
@@ -394,6 +406,42 @@ var csvData = await lara.Glossaries.Export("gls_1A2b3C4d5E6f7G8h9I0jKl", "csv/ta
 var counts = await lara.Glossaries.Counts("gls_1A2b3C4d5E6f7G8h9I0jKl");
 ```
 
+### 📘 Styleguide Management
+
+```csharp
+// Create styleguide
+var styleguide = await lara.Styleguides.Create(
+    "MyStyleguide",
+    "Use a formal tone. Prefer British English spelling. Avoid contractions."
+);
+
+// List all styleguides
+var styleguides = await lara.Styleguides.List();
+
+// Get a styleguide by ID (returns null if not found)
+var retrieved = await lara.Styleguides.Get("sg_1A2b3C4d5E6f7G8h9I0jKl");
+
+// Update a styleguide — omit fields you don't want to change
+// Update only the name
+var renamed = await lara.Styleguides.Update("sg_1A2b3C4d5E6f7G8h9I0jKl", "UpdatedName");
+
+// Update only the content
+var updatedContent = await lara.Styleguides.Update(
+    "sg_1A2b3C4d5E6f7G8h9I0jKl",
+    content: "Use a casual tone. Prefer American English spelling."
+);
+
+// Update both name and content
+var updated = await lara.Styleguides.Update(
+    "sg_1A2b3C4d5E6f7G8h9I0jKl",
+    "FinalName",
+    "Use clear and concise language. Avoid jargon."
+);
+
+// Delete a styleguide
+var deleted = await lara.Styleguides.Delete("sg_1A2b3C4d5E6f7G8h9I0jKl");
+```
+
 ### Translation Options
 
 ```csharp
@@ -480,6 +528,7 @@ dotnet run -- document-translation
 dotnet run -- audio-translation
 dotnet run -- memories-management
 dotnet run -- glossaries-management
+dotnet run -- styleguides-management
 ```
 
 ## 📄 License

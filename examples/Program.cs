@@ -21,6 +21,7 @@ namespace Lara.SDK.Examples
                 Console.WriteLine("  audio-translation    - Audio translation examples");
                 Console.WriteLine("  memories-management   - Translation memory management");
                 Console.WriteLine("  glossaries-management - Glossary management");
+                Console.WriteLine("  styleguides-management - Styleguide management");
                 Console.WriteLine();
                 Console.WriteLine("Example: dotnet run -- text-translation");
                 return;
@@ -47,6 +48,9 @@ namespace Lara.SDK.Examples
                     break;
                 case "glossaries-management":
                     await GlossariesManagement.RunExamples();
+                    break;
+                case "styleguides-management":
+                    await StyleguideManagement.RunExamples();
                     break;
                 default:
                     Console.WriteLine($"Unknown example: {example}");
