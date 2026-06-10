@@ -13,7 +13,9 @@ namespace Lara.SDK.Examples
      * This example demonstrates:
      * - Create, list, update, delete glossaries
      * - CSV import with status monitoring
+     * - CSV import with a callback URL (async notification)
      * - Glossary export
+     * - Async glossary export with a callback URL
      * - Glossary terms count
      * - Import status checking
      */
@@ -143,6 +145,34 @@ namespace Lara.SDK.Examples
                 Console.WriteLine($"CSV file not found: {csvFilePath}");
             }
 
+            // Example 3b: CSV import with a callback URL (async notification)
+            Console.WriteLine("=== CSV Import with a Callback URL ===");
+            if (File.Exists(csvFilePath))
+            {
+                try
+                {
+                    // When a callback URL is provided, Lara notifies your server once the
+                    // import finishes, so you don't need to poll with WaitForImport().
+                    var callbackUrl = "https://your-server.example.com/lara/glossary-import-callback";
+                    var asyncImport = await lara.Glossaries.ImportCsv(
+                        glossaryId,
+                        csvFilePath,
+                        GlossaryFileFormat.CsvTableUni,
+                        false,
+                        callbackUrl);
+                    Console.WriteLine($"Import started with ID: {asyncImport.Id}");
+                    Console.WriteLine($"Lara will POST the result to: {callbackUrl}\n");
+                }
+                catch (LaraException e)
+                {
+                    Console.WriteLine($"Error starting import with callback: {e.Message}\n");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"CSV file not found: {csvFilePath}\n");
+            }
+
             // Example 4: Export functionality with different formats
             Console.WriteLine("=== Export Functionality ===");
             try
@@ -162,6 +192,26 @@ namespace Lara.SDK.Examples
             catch (LaraException e)
             {
                 Console.WriteLine($"Error with export: {e.Message}\n");
+            }
+
+            // Example 4b: Async export with a callback URL
+            Console.WriteLine("=== Async Export with a Callback URL ===");
+            try
+            {
+                // ExportAsync returns a job ID immediately; the exported file is delivered
+                // to your callback URL once it is ready.
+                var callbackUrl = "https://your-server.example.com/lara/glossary-export-callback";
+                var export = await lara.Glossaries.ExportAsync(
+                    glossaryId,
+                    callbackUrl,
+                    GlossaryFileFormat.CsvTableUni,
+                    "en-US"); // optional source language filter
+                Console.WriteLine($"Async export started (job ID: {export.JobId})");
+                Console.WriteLine($"Lara will POST the exported glossary to: {callbackUrl}\n");
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error with async export: {e.Message}\n");
             }
 
             // Example 5: Glossary Terms Count

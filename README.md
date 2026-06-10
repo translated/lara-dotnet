@@ -143,8 +143,8 @@ dotnet run -- memories-management
 ### Glossary Management
 - **[GlossariesManagement.cs](examples/GlossariesManagement.cs)** - Glossary management examples
   - Create, list, update, delete glossaries
-  - CSV import with status monitoring
-  - Glossary export
+  - CSV import with status monitoring and callback URLs
+  - Glossary export and asynchronous export with callback URLs
   - Glossary terms count
   - Import status checking
 
@@ -393,6 +393,14 @@ var glossary = await lara.Glossaries.Create("MyGlossary");
 var csvFilePath = "/path/to/your/glossary.csv";  // Replace with actual CSV file path
 var glossaryImport = await lara.Glossaries.ImportCsv("gls_1A2b3C4d5E6f7G8h9I0jKl", csvFilePath);
 
+// CSV import with a callback URL; Lara notifies the callback URL once the import finishes
+var glossaryImportWithCallback = await lara.Glossaries.ImportCsv(
+    "gls_1A2b3C4d5E6f7G8h9I0jKl",
+    csvFilePath,
+    GlossaryFileFormat.CsvTableUni,
+    callbackUrl: "https://example.com/webhooks/lara-glossary-import"
+);
+
 // Check import status
 var importStatus = await lara.Glossaries.GetImportStatus(glossaryImport.Id);
 
@@ -401,6 +409,15 @@ var completedImport = await lara.Glossaries.WaitForImport(glossaryImport, progre
 
 // Export glossary
 var csvData = await lara.Glossaries.Export("gls_1A2b3C4d5E6f7G8h9I0jKl", "csv/table-uni", "en-US");
+
+// Start an asynchronous glossary export; Lara will notify the callback URL when ready
+var glossaryExport = await lara.Glossaries.ExportAsync(
+    "gls_1A2b3C4d5E6f7G8h9I0jKl",
+    "https://example.com/webhooks/lara-glossary-export",
+    GlossaryFileFormat.CsvTableUni,
+    "en-US" // optional source language filter
+);
+Console.WriteLine($"Export job ID: {glossaryExport.JobId}");
 
 // Get glossary terms count
 var counts = await lara.Glossaries.Counts("gls_1A2b3C4d5E6f7G8h9I0jKl");

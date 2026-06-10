@@ -49,22 +49,26 @@ public class Glossaries
         return await _client.Put<Glossary>($"/v2/glossaries/{id}", new HttpParams<object>().Set("name", name).Build());
     }
     
-    /// Imports a CSV file into an existing glossary.
-    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = null)
+    /// Imports a CSV file into an existing glossary, optionally registering a callback URL for completion notification.
+    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = null, string? callbackUrl = null)
     {
-        return await ImportCsv(id, csvFilePath, GlossaryFileFormat.CsvTableUni, gzip);
+        return await ImportCsv(id, csvFilePath, GlossaryFileFormat.CsvTableUni, gzip, callbackUrl);
     }
 
-    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, GlossaryFileFormat contentType, bool? gzip = null)
+    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, GlossaryFileFormat contentType, bool? gzip = null, string? callbackUrl = null)
     {
         var parameters = new HttpParams<object>()
             .Set("content_type", contentType.ToString());
-        
+
         if (gzip ?? csvFilePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
         {
             parameters.Set("compression", "gzip");
         }
-    
+        if (callbackUrl != null)
+        {
+            parameters.Set("callback_url", callbackUrl);
+        }
+
         await using var fileStream = File.OpenRead(csvFilePath);
         var files = new Dictionary<string, Stream> { ["csv"] = fileStream };
         return await _client.Post<GlossaryImport>($"/v2/glossaries/{id}/import", parameters.Build(), files);
@@ -131,6 +135,17 @@ public class Glossaries
             parameters["source"] = source;
 
         return await _client.Get<Stream>($"/v2/glossaries/{id}/export", parameters);
+    }
+
+    /// Starts an asynchronous export of a glossary and returns the export job ID.
+    public async Task<GlossaryExport> ExportAsync(string id, string callbackUrl, GlossaryFileFormat contentType, string? source = null)
+    {
+        var queryParams = new HttpParams<object>()
+            .Set("callback_url", callbackUrl)
+            .Set("content_type", contentType.ToString())
+            .Set("source", source)
+            .Build();
+        return await _client.Get<GlossaryExport>($"/v2/glossaries/{id}/export/async", queryParams);
     }
 
     /// Adds or replaces terms in a glossary.
