@@ -453,12 +453,16 @@ public class LaraClient
 
         _token = authResult.Token;
 
+        // Refresh tokens are single-use and rotated on every successful refresh, so a token is consumed
+        // once presented. If the auth service does not return a new refresh token, invalidate the previous
+        // one instead of keeping it: replaying an already-rotated token can trip server-side reuse
+        // detection and revoke the session. With no refresh token, the next renewal falls back to the
+        // access key (or fails cleanly for token-only clients).
+        string? newRefreshToken = null;
         if (response.Headers.TryGetValues("x-lara-refresh-token", out var refreshValues))
-        {
-            var newRefreshToken = refreshValues.FirstOrDefault();
-            if (!string.IsNullOrEmpty(newRefreshToken))
-                _refreshToken = newRefreshToken;
-        }
+            newRefreshToken = refreshValues.FirstOrDefault();
+
+        _refreshToken = string.IsNullOrEmpty(newRefreshToken) ? null : newRefreshToken;
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
