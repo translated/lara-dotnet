@@ -29,6 +29,9 @@ public class LaraClient
     private readonly HttpClient _httpClient;
     private readonly Dictionary<string, string> _extraHeaders = new();
 
+    // Session id sent on every access-key authentication request (never on token refresh).
+    private readonly string? _authSessionId;
+
     public LaraClient(AccessKey accessKey, ClientOptions? options) : this(options)
     {
         _accessKey = accessKey;
@@ -50,6 +53,8 @@ public class LaraClient
 
         _httpClient.DefaultRequestHeaders.Add("X-Lara-SDK-Name", "lara-dotnet");
         _httpClient.DefaultRequestHeaders.Add("X-Lara-SDK-Version", SdkVersion.Version);
+
+        _authSessionId = options.SessionId;
     }
 
     /// Sets an extra header to be included with all requests.
@@ -436,10 +441,23 @@ public class LaraClient
 
         var signature = Sign(_accessKey.Secret, "POST", path, contentMd5, contentType, dateHeader);
         request.Headers.TryAddWithoutValidation("Authorization", $"Lara:{signature}");
+        ApplySessionHeader(request);
 
         var response = await _httpClient.SendAsync(request);
         var content = await response.Content.ReadAsStringAsync();
         HandleAuthResponse(response, content);
+    }
+
+    /// <summary>
+    /// Adds the session id header to the access-key authentication request. The header is only
+    /// parsed on the "/v2/auth" endpoint, so it is never attached to token refresh requests.
+    /// The value is preserved for the lifetime of the client, so every access-key
+    /// (re-)authentication carries it.
+    /// </summary>
+    private void ApplySessionHeader(HttpRequestMessage request)
+    {
+        if (string.IsNullOrEmpty(_authSessionId)) return;
+        request.Headers.TryAddWithoutValidation("X-Lara-Auth-Session-Id", _authSessionId);
     }
 
     private void HandleAuthResponse(HttpResponseMessage response, string content)

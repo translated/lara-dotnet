@@ -30,6 +30,9 @@ public class ClientOptions
     /// Gets or sets the read timeout in milliseconds.
     public TimeSpan ReadTimeout { get; set; } = TimeSpan.Zero;
 
+    /// Gets or sets the session id sent on every access-key authentication request.
+    public string? SessionId { get; set; }
+
     /// Sets the server URL with trailing slash normalization.
     [Obsolete("Use the ServerUrl property instead. This method will be removed in a future version.")]
     public ClientOptions SetServerUrl(string? serverUrl)
