@@ -36,25 +36,8 @@ public class AudioTranslator
         string target,
         AudioUploadOptions? options = null)
     {
-        var fileName = Path.GetFileName(filePath);
+        var uploadUrlResponse = await UploadToS3(filePath, Path.GetFileName(filePath));
         
-        // Step 1: Get S3 upload URL
-        var uploadUrlParams = new Dictionary<string, object>
-        {
-            ["filename"] = fileName
-        };
-    
-        var uploadUrlResponse = await _client.Get<S3UploadResponse>("/v2/audio/upload-url", uploadUrlParams);
-
-        if (string.IsNullOrEmpty(uploadUrlResponse.Url))
-        {
-            throw new LaraApiException(500, "InvalidResponse", "S3 upload URL is empty or null");
-        }
-        
-        // Step 2: Upload file to S3
-        await _s3Client.UploadAsync(uploadUrlResponse.Url, uploadUrlResponse.Fields, filePath);
-        
-        // Step 3: Create audio with S3 key
         var createParams = new Dictionary<string, object>
         {
             ["s3key"] = uploadUrlResponse.S3Key,
@@ -81,6 +64,64 @@ public class AudioTranslator
             headers["X-No-Trace"] = "true";
     
         return await _client.Post<Audio>("/v2/audio/translate", createParams, null, headers);
+    }
+
+    /// <summary>
+    /// Uploads an audio file to S3 and creates a transcript translation job.
+    /// </summary>
+    /// <param name="filePath">The local path to the audio file to upload.</param>
+    /// <param name="source">Optional source language code; if null or empty, the language may be auto-detected.</param>
+    /// <param name="target">Target language code for translation.</param>
+    /// <param name="options">Optional transcript translation options.</param>
+    /// <returns>The created <see cref="Audio"/> resource containing job status and metadata.</returns>
+    public async Task<Audio> UploadForTranscription(
+        string filePath,
+        string? source,
+        string target,
+        AudioTranscriptOptions? options = null)
+    {
+        var fileName = Path.GetFileName(filePath);
+        return await UploadForTranscription(filePath, fileName, source, target, options);
+    }
+
+    /// <summary>
+    /// Uploads an audio file to S3 using an explicit filename and creates a transcript translation job.
+    /// </summary>
+    /// <param name="filePath">The local path to the audio file to upload.</param>
+    /// <param name="fileName">The filename to send to the upload-url endpoint.</param>
+    /// <param name="source">Optional source language code; if null or empty, the language may be auto-detected.</param>
+    /// <param name="target">Target language code for translation.</param>
+    /// <param name="options">Optional transcript translation options.</param>
+    /// <returns>The created <see cref="Audio"/> resource containing job status and metadata.</returns>
+    public async Task<Audio> UploadForTranscription(
+        string filePath,
+        string fileName,
+        string? source,
+        string target,
+        AudioTranscriptOptions? options = null)
+    {
+        var uploadUrlResponse = await UploadToS3(filePath, fileName);
+
+        var createParams = new Dictionary<string, object>
+        {
+            ["s3key"] = uploadUrlResponse.S3Key,
+            ["target"] = target
+        };
+
+        if (!string.IsNullOrEmpty(source))
+            createParams["source"] = source;
+
+        if (options != null)
+        {
+            if (options.AdaptTo != null && options.AdaptTo.Length > 0)
+                createParams["adapt_to"] = options.AdaptTo;
+            if (options.Glossaries != null && options.Glossaries.Length > 0)
+                createParams["glossaries"] = options.Glossaries;
+            if (options.Style.HasValue)
+                createParams["style"] = options.Style.Value.ToString().ToLowerInvariant();
+        }
+
+        return await _client.Post<Audio>("/v2/audio/translate-transcript", createParams, null, TranscriptNoTraceHeaders(options));
     }
     
     /// <summary>
@@ -112,6 +153,16 @@ public class AudioTranslator
     }
 
     /// <summary>
+    /// Retrieves the translated transcript for a completed audio transcript job.
+    /// </summary>
+    /// <param name="id">The unique identifier of the audio job.</param>
+    /// <returns>The translated transcript result.</returns>
+    public async Task<AudioTextResult> GetTranslatedTranscript(string id)
+    {
+        return await _client.Get<AudioTextResult>($"/v2/audio/{id}/translated-transcript");
+    }
+
+    /// <summary>
     /// Translates an audio file end-to-end: uploads, creates the job, polls until completion, and downloads the result.
     /// </summary>
     /// <param name="filePath">The local path to the audio file to translate.</param>
@@ -137,6 +188,84 @@ public class AudioTranslator
         }
 
         return await Download(audio.Id);
+    }
+
+    /// <summary>
+    /// Translates an audio file to a transcript end-to-end: uploads, creates the transcript job, polls until completion, and retrieves the transcript result.
+    /// </summary>
+    /// <param name="filePath">The local path to the audio file to translate.</param>
+    /// <param name="source">Optional source language code; if null or empty, the language may be auto-detected.</param>
+    /// <param name="target">Target language code for translation.</param>
+    /// <param name="options">Optional transcript translation options.</param>
+    /// <returns>The translated transcript result.</returns>
+    /// <exception cref="LaraApiException">Thrown when the translation fails or the job ends in error.</exception>
+    /// <exception cref="LaraTimeoutException">Thrown when waiting for completion exceeds the maximum wait time.</exception>
+    public async Task<AudioTextResult> TranslateTranscript(
+        string filePath,
+        string? source,
+        string target,
+        AudioTranscriptOptions? options = null)
+    {
+        var fileName = Path.GetFileName(filePath);
+        return await TranslateTranscript(filePath, fileName, source, target, options);
+    }
+
+    /// <summary>
+    /// Translates an audio file to a transcript end-to-end using an explicit filename.
+    /// </summary>
+    /// <param name="filePath">The local path to the audio file to translate.</param>
+    /// <param name="fileName">The filename to send to the upload-url endpoint.</param>
+    /// <param name="source">Optional source language code; if null or empty, the language may be auto-detected.</param>
+    /// <param name="target">Target language code for translation.</param>
+    /// <param name="options">Optional transcript translation options.</param>
+    /// <returns>The translated transcript result.</returns>
+    /// <exception cref="LaraApiException">Thrown when the translation fails or the job ends in error.</exception>
+    /// <exception cref="LaraTimeoutException">Thrown when waiting for completion exceeds the maximum wait time.</exception>
+    public async Task<AudioTextResult> TranslateTranscript(
+        string filePath,
+        string fileName,
+        string? source,
+        string target,
+        AudioTranscriptOptions? options = null)
+    {
+        var audio = await UploadForTranscription(filePath, fileName, source, target, options);
+        audio = await PollAudioUntilCompleted(audio);
+
+        if (audio.Status == AudioStatus.Error)
+        {
+            var errorMessage = audio.ErrorReason ?? "Transcript translation failed";
+            throw new LaraApiException(500, "AudioError", errorMessage);
+        }
+
+        return await GetTranslatedTranscript(audio.Id);
+    }
+
+    private async Task<S3UploadResponse> UploadToS3(string filePath, string fileName)
+    {
+        var uploadUrlParams = new Dictionary<string, object>
+        {
+            ["filename"] = fileName
+        };
+
+        var uploadUrlResponse = await _client.Get<S3UploadResponse>("/v2/audio/upload-url", uploadUrlParams);
+
+        if (string.IsNullOrEmpty(uploadUrlResponse.Url))
+        {
+            throw new LaraApiException(500, "InvalidResponse", "S3 upload URL is empty or null");
+        }
+
+        await _s3Client.UploadAsync(uploadUrlResponse.Url, uploadUrlResponse.Fields, filePath);
+        return uploadUrlResponse;
+    }
+
+    private static Dictionary<string, string> TranscriptNoTraceHeaders(AudioTranscriptOptions? options)
+    {
+        var headers = new Dictionary<string, string>();
+
+        if (options?.NoTrace == true)
+            headers["X-No-Trace"] = "true";
+
+        return headers;
     }
     
     /// <summary>

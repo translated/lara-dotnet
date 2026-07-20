@@ -18,7 +18,8 @@ namespace Lara.SDK.Examples
                 Console.WriteLine("  text-translation      - Text translation examples");
                 Console.WriteLine("  image-translation     - Image translation examples");
                 Console.WriteLine("  document-translation  - Document translation examples");
-                Console.WriteLine("  audio-translation    - Audio translation examples");
+                Console.WriteLine("  audio-translation     - Audio translation examples");
+                Console.WriteLine("  audio-transcript-translation - Audio transcript translation examples");
                 Console.WriteLine("  memories-management   - Translation memory management");
                 Console.WriteLine("  glossaries-management - Glossary management");
                 Console.WriteLine("  styleguides-management - Styleguide management");
@@ -42,6 +43,9 @@ namespace Lara.SDK.Examples
                     break;
                 case "audio-translation":
                     await AudioTranslation.RunExamples();
+                    break;
+                case "audio-transcript-translation":
+                    await AudioTranscriptTranslation.RunExamples();
                     break;
                 case "memories-management":
                     await MemoriesManagement.RunExamples();
