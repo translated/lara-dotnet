@@ -70,6 +70,11 @@ public class AudioOptions
     /// Optional voice gender (Male or Female) for the translated audio output.
     /// </summary>
     public VoiceGender? VoiceGender { get; set; }
+
+    /// <summary>
+    /// Optional setting to clone the source speaker's voice in the translated audio output.
+    /// </summary>
+    public bool? VoiceCloning { get; set; }
 }
 
 /// <summary>

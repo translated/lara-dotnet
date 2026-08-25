@@ -55,6 +55,8 @@ public class AudioTranslator
                 createParams["glossaries"] = options.Glossaries;
             if (options.Style.HasValue)
                 createParams["style"] = options.Style.Value.ToString().ToLowerInvariant();
+            if (options.VoiceCloning.HasValue)
+                createParams["voice_cloning"] = options.VoiceCloning.Value;
             if (options.VoiceGender.HasValue)
                 createParams["voice_gender"] = options.VoiceGender.Value.ToString().ToLowerInvariant();
         }
