@@ -74,7 +74,56 @@ public class Memories
     
         return await _client.Post<List<Memory>>("/v2/memories/connect", parameters.Build());
     }
-    
+
+    /// <summary>Lists the account, group, and user shares visible for a memory.</summary>
+    /// <param name="id">The memory ID.</param>
+    /// <returns>The shares configured for the memory.</returns>
+    public async Task<MemoryShares> GetShares(string id) =>
+        await _client.Get<MemoryShares>($"/v2/memories/{id}/shares");
+
+    /// <summary>Creates or updates the account-level share for a memory.</summary>
+    /// <param name="id">The memory ID.</param>
+    /// <param name="name">An optional share name visible to recipients.</param>
+    /// <returns>The updated memory.</returns>
+    public async Task<Memory> AddAccountShare(string id, string? name = null) =>
+        await _client.Post<Memory>($"/v2/memories/{id}/shares", ShareParams.WithName(name));
+
+    /// <summary>Renames the account-level share for a memory.</summary>
+    /// <param name="id">The memory ID.</param>
+    /// <param name="name">The new share name visible to recipients.</param>
+    /// <returns>The updated memory.</returns>
+    public async Task<Memory> RenameAccountShare(string id, string name) =>
+        await _client.Put<Memory>($"/v2/memories/{id}/shares", ShareParams.WithName(name));
+
+    /// <summary>Revokes the account-level share for a memory.</summary>
+    /// <param name="id">The memory ID.</param>
+    /// <returns>The updated memory.</returns>
+    public async Task<Memory> RevokeAccountShare(string id) =>
+        await _client.Delete<Memory>($"/v2/memories/{id}/shares");
+
+    /// <summary>Creates or updates a group share for a memory.</summary>
+    /// <param name="id">The memory ID.</param>
+    /// <param name="groupId">The ID of the group receiving access.</param>
+    /// <param name="name">An optional share name visible to recipients.</param>
+    /// <returns>The updated memory.</returns>
+    public async Task<Memory> AddGroupShare(string id, string groupId, string? name = null) =>
+        await _client.Post<Memory>($"/v2/memories/{id}/shares/groups/{groupId}", ShareParams.WithName(name));
+
+    /// <summary>Renames a group share for a memory.</summary>
+    /// <param name="id">The memory ID.</param>
+    /// <param name="groupId">The ID of the group whose share is being renamed.</param>
+    /// <param name="name">The new share name visible to recipients.</param>
+    /// <returns>The updated memory.</returns>
+    public async Task<Memory> RenameGroupShare(string id, string groupId, string name) =>
+        await _client.Put<Memory>($"/v2/memories/{id}/shares/groups/{groupId}", ShareParams.WithName(name));
+
+    /// <summary>Revokes a group share for a memory.</summary>
+    /// <param name="id">The memory ID.</param>
+    /// <param name="groupId">The ID of the group whose access is being revoked.</param>
+    /// <returns>The updated memory.</returns>
+    public async Task<Memory> RevokeGroupShare(string id, string groupId) =>
+        await _client.Delete<Memory>($"/v2/memories/{id}/shares/groups/{groupId}");
+
     /// Imports a TMX file, optionally registering a callback URL for completion notification
     public async Task<MemoryImport> ImportTmx(string id, string tmxFilePath, bool? gzip = null, string? callbackUrl = null)
     {

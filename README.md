@@ -381,6 +381,14 @@ var deleteJob = await lara.Memories.DeleteTranslation(
 
 // Wait for import completion
 var completedImport = await lara.Memories.WaitForImport(memoryImport, progressCallback, TimeSpan.FromMinutes(5));
+
+// Share with the account or a group; shares can be renamed, listed, and revoked
+await lara.Memories.AddAccountShare(memory.Id, "Team memory");
+await lara.Memories.RenameAccountShare(memory.Id, "Company memory");
+await lara.Memories.AddGroupShare(memory.Id, "grp_1A2b3C4d5E6f7G8h9I0jKl", "Marketing memory");
+var shares = await lara.Memories.GetShares(memory.Id);
+await lara.Memories.RevokeGroupShare(memory.Id, "grp_1A2b3C4d5E6f7G8h9I0jKl");
+await lara.Memories.RevokeAccountShare(memory.Id);
 ```
 
 ### 📚 Glossary Management
@@ -421,6 +429,11 @@ Console.WriteLine($"Export job ID: {glossaryExport.JobId}");
 
 // Get glossary terms count
 var counts = await lara.Glossaries.Counts("gls_1A2b3C4d5E6f7G8h9I0jKl");
+
+// Glossaries support the same account and group sharing workflow
+await lara.Glossaries.AddAccountShare(glossary.Id, "Team glossary");
+var glossaryShares = await lara.Glossaries.GetShares(glossary.Id);
+await lara.Glossaries.RevokeAccountShare(glossary.Id);
 ```
 
 ### 📘 Styleguide Management
@@ -454,6 +467,10 @@ var updated = await lara.Styleguides.Update(
     "FinalName",
     "Use clear and concise language. Avoid jargon."
 );
+
+// Share a styleguide and inspect visible account, group, and user shares
+await lara.Styleguides.AddGroupShare(styleguide.Id, "grp_1A2b3C4d5E6f7G8h9I0jKl", "Marketing styleguide");
+var styleguideShares = await lara.Styleguides.GetShares(styleguide.Id);
 
 // Delete a styleguide
 var deleted = await lara.Styleguides.Delete("sg_1A2b3C4d5E6f7G8h9I0jKl");

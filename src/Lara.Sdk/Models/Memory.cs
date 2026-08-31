@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Lara.Sdk;
@@ -15,7 +14,7 @@ public class Memory
     public DateTime UpdatedAt { get; }
 
     /// Gets the date and time when the memory was shared.
-    public DateTime? SharedAt { get; }
+    public DateTime SharedAt { get; }
 
     /// Gets the name of the memory.
     public string Name { get; }
@@ -33,6 +32,7 @@ public class Memory
     public int CollaboratorsCount { get; }
 
     /// Gets the isPersonal property.
+    [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
     public bool IsPersonal { get; }
 
     /// Initializes a new instance of the Memory class.
@@ -41,7 +41,7 @@ public class Memory
         string id, 
         DateTime createdAt, 
         DateTime updatedAt, 
-        DateTime? sharedAt, 
+        DateTime sharedAt,
         string name, 
         string? externalId, 
         string? secret, 
@@ -75,7 +75,7 @@ public class Memory
 
     /// Gets the date and time when the memory was shared.
     [Obsolete("Use the SharedAt property instead. This method will be removed in a future release.")]
-    public DateTime? GetSharedAt() => SharedAt;
+    public DateTime GetSharedAt() => SharedAt;
 
     /// Gets the name of the memory.
     [Obsolete("Use the Name property instead. This method will be removed in a future release.")]

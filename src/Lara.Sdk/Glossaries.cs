@@ -48,7 +48,56 @@ public class Glossaries
     {
         return await _client.Put<Glossary>($"/v2/glossaries/{id}", new HttpParams<object>().Set("name", name).Build());
     }
-    
+
+    /// <summary>Lists the account, group, and user shares visible for a glossary.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <returns>The shares configured for the glossary.</returns>
+    public async Task<GlossaryShares> GetShares(string id) =>
+        await _client.Get<GlossaryShares>($"/v2/glossaries/{id}/shares");
+
+    /// <summary>Creates or updates the account-level share for a glossary.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <param name="name">An optional share name visible to recipients.</param>
+    /// <returns>The updated glossary.</returns>
+    public async Task<Glossary> AddAccountShare(string id, string? name = null) =>
+        await _client.Post<Glossary>($"/v2/glossaries/{id}/shares", ShareParams.WithName(name));
+
+    /// <summary>Renames the account-level share for a glossary.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <param name="name">The new share name visible to recipients.</param>
+    /// <returns>The updated glossary.</returns>
+    public async Task<Glossary> RenameAccountShare(string id, string name) =>
+        await _client.Put<Glossary>($"/v2/glossaries/{id}/shares", ShareParams.WithName(name));
+
+    /// <summary>Revokes the account-level share for a glossary.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <returns>The updated glossary.</returns>
+    public async Task<Glossary> RevokeAccountShare(string id) =>
+        await _client.Delete<Glossary>($"/v2/glossaries/{id}/shares");
+
+    /// <summary>Creates or updates a group share for a glossary.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <param name="groupId">The ID of the group receiving access.</param>
+    /// <param name="name">An optional share name visible to recipients.</param>
+    /// <returns>The updated glossary.</returns>
+    public async Task<Glossary> AddGroupShare(string id, string groupId, string? name = null) =>
+        await _client.Post<Glossary>($"/v2/glossaries/{id}/shares/groups/{groupId}", ShareParams.WithName(name));
+
+    /// <summary>Renames a group share for a glossary.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <param name="groupId">The ID of the group whose share is being renamed.</param>
+    /// <param name="name">The new share name visible to recipients.</param>
+    /// <returns>The updated glossary.</returns>
+    public async Task<Glossary> RenameGroupShare(string id, string groupId, string name) =>
+        await _client.Put<Glossary>($"/v2/glossaries/{id}/shares/groups/{groupId}", ShareParams.WithName(name));
+
+    /// <summary>Revokes a group share for a glossary.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <param name="groupId">The ID of the group whose access is being revoked.</param>
+    /// <returns>The updated glossary.</returns>
+    public async Task<Glossary> RevokeGroupShare(string id, string groupId) =>
+        await _client.Delete<Glossary>($"/v2/glossaries/{id}/shares/groups/{groupId}");
+
     /// Imports a CSV file into an existing glossary, optionally registering a callback URL for completion notification.
     public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = null, string? callbackUrl = null)
     {

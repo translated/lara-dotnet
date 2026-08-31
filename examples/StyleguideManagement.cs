@@ -9,6 +9,7 @@ namespace Lara.SDK.Examples
      *
      * This example demonstrates:
      * - Create, list, get, update, delete styleguides
+     * - Sharing a styleguide with the account or a group (add, rename, list, revoke)
      */
     public static class StyleguideManagement
     {
@@ -109,6 +110,64 @@ namespace Lara.SDK.Examples
                     Console.WriteLine("Styleguide not found (returned null as expected)");
                 }
                 Console.WriteLine();
+                // Example 5: Styleguide sharing
+                // Sharing requires a multi-user account and the appropriate role (account owner for
+                // account-wide shares, owner/admin for group shares). Each call returns the shared
+                // styleguide, whose Name reflects the shared copy's name and SharedAt the share time.
+                Console.WriteLine("=== Styleguide Sharing ===");
+                try
+                {
+                    // Share with the whole account/team (the optional name argument names the shared copy)
+                    var teamShare = await lara.Styleguides.AddAccountShare(styleguideId, "Shared with the team");
+                    Console.WriteLine($"Shared with the account as: '{teamShare.Name}' (shared at {teamShare.SharedAt})");
+
+                    // Rename the account/team share
+                    var renamedTeamShare = await lara.Styleguides.RenameAccountShare(styleguideId, "Team styleguide");
+                    Console.WriteLine($"Renamed account share to: '{renamedTeamShare.Name}'");
+
+                    // List every share visible to the caller: the account share, group shares and user shares
+                    var shares = await lara.Styleguides.GetShares(styleguideId);
+                    if (shares.Account != null)
+                    {
+                        Console.WriteLine($"Account share '{shares.Account.ShareName}' ({shares.Account.Permissions})");
+                    }
+                    foreach (var group in shares.Groups)
+                    {
+                        Console.WriteLine($"Group {group.Name}: '{group.ShareName}' ({group.Permissions})");
+                    }
+                    foreach (var user in shares.Users)
+                    {
+                        Console.WriteLine($"User {user.Name}: '{user.ShareName}' ({user.Permissions})");
+                    }
+
+                    // Revoke the account/team share
+                    await lara.Styleguides.RevokeAccountShare(styleguideId);
+                    Console.WriteLine("Revoked the account share");
+
+                    // Group shares work the same way, addressed by a group ID (grp_...)
+                    var groupId = Environment.GetEnvironmentVariable("LARA_GROUP_ID");
+                    if (!string.IsNullOrEmpty(groupId))
+                    {
+                        var groupShare = await lara.Styleguides.AddGroupShare(styleguideId, groupId, "Shared with the group");
+                        Console.WriteLine($"Shared with group {groupId} as: '{groupShare.Name}'");
+
+                        await lara.Styleguides.RenameGroupShare(styleguideId, groupId, "Marketing group");
+                        Console.WriteLine("Renamed the group share");
+
+                        await lara.Styleguides.RevokeGroupShare(styleguideId, groupId);
+                        Console.WriteLine("Revoked the group share");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Set LARA_GROUP_ID to try the group sharing methods.");
+                    }
+                    Console.WriteLine();
+                }
+                catch (LaraException e)
+                {
+                    Console.WriteLine($"Error sharing styleguide: {e.Message}\n");
+                }
+
             }
             catch (LaraException e)
             {

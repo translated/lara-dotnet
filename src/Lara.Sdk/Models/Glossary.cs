@@ -21,6 +21,9 @@ public class Glossary
     /// Gets the date and time when the glossary was last updated.
     public DateTime UpdatedAt { get; }
 
+    /// Gets the date and time when the glossary was shared.
+    public DateTime SharedAt { get; }
+
     /// Gets the name of the glossary.
     public string Name { get; }
 
@@ -28,14 +31,15 @@ public class Glossary
     public string OwnerId { get; }
 
     /// Gets the isPersonal property.
+    [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
     public bool IsPersonal { get; }
 
-    /// Initializes a new instance of the Glossary class.
     [JsonConstructor]
     public Glossary(
         string id, 
         DateTime createdAt, 
         DateTime updatedAt, 
+        DateTime sharedAt,
         string name, 
         string ownerId,
         bool isPersonal
@@ -44,6 +48,7 @@ public class Glossary
         Id = id;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
+        SharedAt = sharedAt;
         Name = name;
         OwnerId = ownerId;
         IsPersonal = isPersonal;

@@ -17,6 +17,7 @@ namespace Lara.SDK.Examples
      * - Asynchronous memory export with callback URLs
      * - Translation deletion
      * - Translation with TUID and context
+     * - Sharing a memory with the account or a group (add, rename, list, revoke)
      */
     public static class MemoriesManagement
     {
@@ -208,6 +209,64 @@ namespace Lara.SDK.Examples
             catch (LaraException e)
             {
                 Console.WriteLine($"Error deleting translation: {e.Message}\n");
+            }
+
+            // Example 7: Memory sharing
+            // Sharing requires a multi-user account and the appropriate role (account owner for
+            // account-wide shares, owner/admin for group shares). Each call returns the shared
+            // memory, whose Name reflects the shared copy's name and SharedAt the share time.
+            Console.WriteLine("=== Memory Sharing ===");
+            try
+            {
+                // Share with the whole account/team (the optional name argument names the shared copy)
+                var teamShare = await lara.Memories.AddAccountShare(memoryId!, "Shared with the team");
+                Console.WriteLine($"Shared with the account as: '{teamShare.Name}' (shared at {teamShare.SharedAt})");
+
+                // Rename the account/team share
+                var renamedTeamShare = await lara.Memories.RenameAccountShare(memoryId!, "Team memory");
+                Console.WriteLine($"Renamed account share to: '{renamedTeamShare.Name}'");
+
+                // List every share visible to the caller: the account share, group shares and user shares
+                var shares = await lara.Memories.GetShares(memoryId!);
+                if (shares.Account != null)
+                {
+                    Console.WriteLine($"Account share '{shares.Account.ShareName}' ({shares.Account.Permissions})");
+                }
+                foreach (var group in shares.Groups)
+                {
+                    Console.WriteLine($"Group {group.Name}: '{group.ShareName}' ({group.Permissions})");
+                }
+                foreach (var user in shares.Users)
+                {
+                    Console.WriteLine($"User {user.Name}: '{user.ShareName}' ({user.Permissions})");
+                }
+
+                // Revoke the account/team share
+                await lara.Memories.RevokeAccountShare(memoryId!);
+                Console.WriteLine("Revoked the account share");
+
+                // Group shares work the same way, addressed by a group ID (grp_...)
+                var groupId = Environment.GetEnvironmentVariable("LARA_GROUP_ID");
+                if (!string.IsNullOrEmpty(groupId))
+                {
+                    var groupShare = await lara.Memories.AddGroupShare(memoryId!, groupId, "Shared with the group");
+                    Console.WriteLine($"Shared with group {groupId} as: '{groupShare.Name}'");
+
+                    await lara.Memories.RenameGroupShare(memoryId!, groupId, "Marketing group");
+                    Console.WriteLine("Renamed the group share");
+
+                    await lara.Memories.RevokeGroupShare(memoryId!, groupId);
+                    Console.WriteLine("Revoked the group share");
+                }
+                else
+                {
+                    Console.WriteLine("Set LARA_GROUP_ID to try the group sharing methods.");
+                }
+                Console.WriteLine();
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error sharing memory: {e.Message}\n");
             }
 
             // Cleanup

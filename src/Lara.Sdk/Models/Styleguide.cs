@@ -23,7 +23,11 @@ public class Styleguide
     /// Gets the date and time when the styleguide was last updated.
     public DateTime UpdatedAt { get; }
 
+    /// Gets the date and time when the styleguide was shared.
+    public DateTime SharedAt { get; }
+
     /// Gets the isPersonal property.
+    [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
     public bool IsPersonal { get; }
 
     [JsonConstructor]
@@ -34,6 +38,7 @@ public class Styleguide
         string ownerId,
         DateTime createdAt,
         DateTime updatedAt,
+        DateTime sharedAt,
         bool isPersonal)
     {
         Id = id;
@@ -42,6 +47,7 @@ public class Styleguide
         OwnerId = ownerId;
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
+        SharedAt = sharedAt;
         IsPersonal = isPersonal;
     }
 

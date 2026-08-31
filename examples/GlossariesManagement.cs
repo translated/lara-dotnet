@@ -18,6 +18,7 @@ namespace Lara.SDK.Examples
      * - Async glossary export with a callback URL
      * - Glossary terms count
      * - Import status checking
+     * - Sharing a glossary with the account or a group (add, rename, list, revoke)
      */
     public static class GlossariesManagement
     {
@@ -291,6 +292,64 @@ namespace Lara.SDK.Examples
             catch (LaraException e)
             {
                 Console.WriteLine($"Error with term entries: {e.Message}\n");
+            }
+
+            // Example 7: Glossary sharing
+            // Sharing requires a multi-user account and the appropriate role (account owner for
+            // account-wide shares, owner/admin for group shares). Each call returns the shared
+            // glossary, whose Name reflects the shared copy's name and SharedAt the share time.
+            Console.WriteLine("=== Glossary Sharing ===");
+            try
+            {
+                // Share with the whole account/team (the optional name argument names the shared copy)
+                var teamShare = await lara.Glossaries.AddAccountShare(glossaryId, "Shared with the team");
+                Console.WriteLine($"Shared with the account as: '{teamShare.Name}' (shared at {teamShare.SharedAt})");
+
+                // Rename the account/team share
+                var renamedTeamShare = await lara.Glossaries.RenameAccountShare(glossaryId, "Team glossary");
+                Console.WriteLine($"Renamed account share to: '{renamedTeamShare.Name}'");
+
+                // List every share visible to the caller: the account share, group shares and user shares
+                var shares = await lara.Glossaries.GetShares(glossaryId);
+                if (shares.Account != null)
+                {
+                    Console.WriteLine($"Account share '{shares.Account.ShareName}' ({shares.Account.Permissions})");
+                }
+                foreach (var group in shares.Groups)
+                {
+                    Console.WriteLine($"Group {group.Name}: '{group.ShareName}' ({group.Permissions})");
+                }
+                foreach (var user in shares.Users)
+                {
+                    Console.WriteLine($"User {user.Name}: '{user.ShareName}' ({user.Permissions})");
+                }
+
+                // Revoke the account/team share
+                await lara.Glossaries.RevokeAccountShare(glossaryId);
+                Console.WriteLine("Revoked the account share");
+
+                // Group shares work the same way, addressed by a group ID (grp_...)
+                var groupId = Environment.GetEnvironmentVariable("LARA_GROUP_ID");
+                if (!string.IsNullOrEmpty(groupId))
+                {
+                    var groupShare = await lara.Glossaries.AddGroupShare(glossaryId, groupId, "Shared with the group");
+                    Console.WriteLine($"Shared with group {groupId} as: '{groupShare.Name}'");
+
+                    await lara.Glossaries.RenameGroupShare(glossaryId, groupId, "Marketing group");
+                    Console.WriteLine("Renamed the group share");
+
+                    await lara.Glossaries.RevokeGroupShare(glossaryId, groupId);
+                    Console.WriteLine("Revoked the group share");
+                }
+                else
+                {
+                    Console.WriteLine("Set LARA_GROUP_ID to try the group sharing methods.");
+                }
+                Console.WriteLine();
+            }
+            catch (LaraException e)
+            {
+                Console.WriteLine($"Error sharing glossary: {e.Message}\n");
             }
 
             // Cleanup
