@@ -397,16 +397,20 @@ await lara.Memories.RevokeAccountShare(memory.Id);
 // Create glossary
 var glossary = await lara.Glossaries.Create("MyGlossary");
 
-// Import CSV from file
-var csvFilePath = "/path/to/your/glossary.csv";  // Replace with actual CSV file path
-var glossaryImport = await lara.Glossaries.ImportCsv("gls_1A2b3C4d5E6f7G8h9I0jKl", csvFilePath);
+// Import a glossary file (use GlossaryFileFormat.Tbx for TBX files)
+var glossaryFilePath = "/path/to/your/glossary.csv";
+var glossaryImport = await lara.Glossaries.ImportFile(
+    "gls_1A2b3C4d5E6f7G8h9I0jKl",
+    glossaryFilePath,
+    new GlossaryImportOptions { ContentType = GlossaryFileFormat.CsvTableUni });
+
+// Omit options to use unidirectional CSV and detect gzip from the filename.
 
 // CSV import with a callback URL; Lara notifies the callback URL once the import finishes
-var glossaryImportWithCallback = await lara.Glossaries.ImportCsv(
+var glossaryImportWithCallback = await lara.Glossaries.ImportFile(
     "gls_1A2b3C4d5E6f7G8h9I0jKl",
-    csvFilePath,
-    GlossaryFileFormat.CsvTableUni,
-    callbackUrl: "https://example.com/webhooks/lara-glossary-import"
+    glossaryFilePath,
+    new GlossaryImportOptions { CallbackUrl = "https://example.com/webhooks/lara-glossary-import" }
 );
 
 // Check import status

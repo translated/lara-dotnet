@@ -1,7 +1,7 @@
 namespace Lara.Sdk;
 
 /// <summary>
-/// Represents the file format for glossaries, providing predefined formats for CSV table structures.
+/// Represents a supported glossary file format, including CSV table structures and TBX.
 /// This class uses a smart enum pattern to define supported glossary file formats.
 /// </summary>
 public sealed class GlossaryFileFormat
@@ -16,6 +16,11 @@ public sealed class GlossaryFileFormat
     /// Represents the CSV table format for multi-language glossaries.
     /// </summary>
     public static readonly GlossaryFileFormat CsvTableMulti = new GlossaryFileFormat("csv/table-multi");
+
+    /// <summary>
+    /// Represents the TBX format for multi-language glossaries.
+    /// </summary>
+    public static readonly GlossaryFileFormat Tbx = new GlossaryFileFormat("tbx");
     
     /// <summary>
     /// Gets the string value representing the glossary file format.

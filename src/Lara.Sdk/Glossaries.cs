@@ -98,29 +98,46 @@ public class Glossaries
     public async Task<Glossary> RevokeGroupShare(string id, string groupId) =>
         await _client.Delete<Glossary>($"/v2/glossaries/{id}/shares/groups/{groupId}");
 
-    /// Imports a CSV file into an existing glossary, optionally registering a callback URL for completion notification.
-    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = null, string? callbackUrl = null)
+    /// Imports a file into an existing glossary, optionally registering a callback URL for completion notification.
+    public async Task<GlossaryImport> ImportFile(string id, string filePath, GlossaryImportOptions? options = null)
     {
-        return await ImportCsv(id, csvFilePath, GlossaryFileFormat.CsvTableUni, gzip, callbackUrl);
-    }
-
-    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, GlossaryFileFormat contentType, bool? gzip = null, string? callbackUrl = null)
-    {
+        options ??= new GlossaryImportOptions();
         var parameters = new HttpParams<object>()
-            .Set("content_type", contentType.ToString());
+            .Set("content_type", options.ContentType.ToString());
 
-        if (gzip ?? csvFilePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+        if (options.Gzip ?? filePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
         {
             parameters.Set("compression", "gzip");
         }
-        if (callbackUrl != null)
+        if (options.CallbackUrl != null)
         {
-            parameters.Set("callback_url", callbackUrl);
+            parameters.Set("callback_url", options.CallbackUrl);
         }
 
-        await using var fileStream = File.OpenRead(csvFilePath);
+        await using var fileStream = File.OpenRead(filePath);
         var files = new Dictionary<string, Stream> { ["csv"] = fileStream };
         return await _client.Post<GlossaryImport>($"/v2/glossaries/{id}/import", parameters.Build(), files);
+    }
+
+    [Obsolete("Use ImportFile instead.")]
+    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = null, string? callbackUrl = null)
+    {
+        return await ImportFile(id, csvFilePath, new GlossaryImportOptions { Gzip = gzip, CallbackUrl = callbackUrl });
+    }
+
+    [Obsolete("Use ImportFile instead.")]
+    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, GlossaryFileFormat contentType, bool? gzip = null, string? callbackUrl = null)
+    {
+        if (contentType == GlossaryFileFormat.Tbx)
+        {
+            throw new ArgumentException("ImportCsv only supports CSV formats; use ImportFile for TBX files.", nameof(contentType));
+        }
+        return await ImportFile(id, csvFilePath, new GlossaryImportOptions
+        {
+            ContentType = contentType,
+            Gzip = gzip,
+            CallbackUrl = callbackUrl
+        });
     }
     
     /// Checks the status of an ongoing glossary import.
@@ -157,7 +174,11 @@ public class Glossaries
         return await _client.Get<GlossaryCounts>($"/v2/glossaries/{id}/counts");
     }
     
-    /// Exports a glossary as CSV.
+    /// <summary>Exports a glossary in the requested Lara glossary file format.</summary>
+    /// <param name="id">The glossary ID.</param>
+    /// <param name="contentType">A Lara glossary file format identifier, such as <c>csv/table-uni</c> or <c>tbx</c>.</param>
+    /// <param name="source">Required for unidirectional CSV formats; omit for multidirectional CSV and TBX.</param>
+    /// <returns>A stream containing the exported glossary.</returns>
     public async Task<Stream> Export(string id, string contentType, string? source)
     {
         var parameters = new Dictionary<string, object>

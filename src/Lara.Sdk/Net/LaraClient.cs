@@ -541,6 +541,7 @@ public class LaraClient
             ".avif" => "image/avif",
             ".heic" => "image/heic",
             ".heif" => "image/heic",
+            ".tbx" => "application/xml",
             _ => null
         };
     }

@@ -114,7 +114,7 @@ namespace Lara.SDK.Examples
                 try
                 {
                     Console.WriteLine($"Importing CSV file: {Path.GetFileName(csvFilePath)}");
-                    var import = await lara.Glossaries.ImportCsv(glossaryId, csvFilePath);
+                    var import = await lara.Glossaries.ImportFile(glossaryId, csvFilePath);
                     Console.WriteLine($"Import started with ID: {import.Id}");
                     Console.WriteLine($"Initial progress: {import.Progress * 100}%");
 
@@ -155,12 +155,10 @@ namespace Lara.SDK.Examples
                     // When a callback URL is provided, Lara notifies your server once the
                     // import finishes, so you don't need to poll with WaitForImport().
                     var callbackUrl = "https://your-server.example.com/lara/glossary-import-callback";
-                    var asyncImport = await lara.Glossaries.ImportCsv(
+                    var asyncImport = await lara.Glossaries.ImportFile(
                         glossaryId,
                         csvFilePath,
-                        GlossaryFileFormat.CsvTableUni,
-                        false,
-                        callbackUrl);
+                        new GlossaryImportOptions { CallbackUrl = callbackUrl });
                     Console.WriteLine($"Import started with ID: {asyncImport.Id}");
                     Console.WriteLine($"Lara will POST the result to: {callbackUrl}\n");
                 }
