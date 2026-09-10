@@ -124,11 +124,15 @@ public class Memories
     public async Task<Memory> RevokeGroupShare(string id, string groupId) =>
         await _client.Delete<Memory>($"/v2/memories/{id}/shares/groups/{groupId}");
 
-    /// Imports a TMX file, optionally registering a callback URL for completion notification
-    public async Task<MemoryImport> ImportTmx(string id, string tmxFilePath, bool? gzip = null, string? callbackUrl = null)
+    /// <summary>
+    /// Imports a TMX file unchanged, optionally registering a callback URL for completion notification.
+    /// Set <paramref name="gzip"/> to true for an already gzip-compressed file to send <c>compression=gzip</c>.
+    /// False (the default) and null omit this field. The filename does not affect this option.
+    /// </summary>
+    public async Task<MemoryImport> ImportTmx(string id, string tmxFilePath, bool? gzip = false, string? callbackUrl = null)
     {
         var parameters = new HttpParams<object>();
-        if (gzip ?? tmxFilePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+        if (gzip == true)
         {
             parameters.Set("compression", "gzip");
         }

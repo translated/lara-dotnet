@@ -105,7 +105,7 @@ public class Glossaries
         var parameters = new HttpParams<object>()
             .Set("content_type", options.ContentType.ToString());
 
-        if (options.Gzip ?? filePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+        if (options.Gzip == true)
         {
             parameters.Set("compression", "gzip");
         }
@@ -120,13 +120,13 @@ public class Glossaries
     }
 
     [Obsolete("Use ImportFile instead.")]
-    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = null, string? callbackUrl = null)
+    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, bool? gzip = false, string? callbackUrl = null)
     {
         return await ImportFile(id, csvFilePath, new GlossaryImportOptions { Gzip = gzip, CallbackUrl = callbackUrl });
     }
 
     [Obsolete("Use ImportFile instead.")]
-    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, GlossaryFileFormat contentType, bool? gzip = null, string? callbackUrl = null)
+    public async Task<GlossaryImport> ImportCsv(string id, string csvFilePath, GlossaryFileFormat contentType, bool? gzip = false, string? callbackUrl = null)
     {
         if (contentType == GlossaryFileFormat.Tbx)
         {

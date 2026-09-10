@@ -146,7 +146,6 @@ namespace Lara.SDK.Examples
                     var importWithCallback = await lara.Memories.ImportTmx(
                         memoryId!,
                         tmxFilePath,
-                        gzip: tmxFilePath.EndsWith(".gz", StringComparison.OrdinalIgnoreCase),
                         callbackUrl: callbackUrl);
                     Console.WriteLine($"Import with callback started with ID: {importWithCallback.Id}");
                     Console.WriteLine($"Callback will be sent to: {callbackUrl}");

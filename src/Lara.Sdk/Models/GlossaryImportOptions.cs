@@ -5,8 +5,11 @@ public class GlossaryImportOptions
 {
     public GlossaryFileFormat ContentType { get; set; } = GlossaryFileFormat.CsvTableUni;
 
-    /// <summary>Null detects gzip from the filename; true marks an already compressed file.</summary>
-    public bool? Gzip { get; set; }
+    /// <summary>
+    /// Whether the supplied file is already gzip-compressed. True sends <c>compression=gzip</c>;
+    /// false (the default) and null omit the compression field. File contents are uploaded unchanged.
+    /// </summary>
+    public bool? Gzip { get; set; } = false;
 
     public string? CallbackUrl { get; set; }
 }

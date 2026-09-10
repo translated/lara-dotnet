@@ -358,14 +358,6 @@ var memoryImportWithCallback = await lara.Memories.ImportTmx(
     callbackUrl: "https://example.com/webhooks/lara-memory-import"
 );
 
-// TMX import with gzip compression and a callback URL
-var compressedMemoryImport = await lara.Memories.ImportTmx(
-    "mem_1A2b3C4d5E6f7G8h9I0jKl",
-    "/path/to/your/memory.tmx.gz",
-    gzip: true,
-    callbackUrl: "https://example.com/webhooks/lara-memory-import"
-);
-
 // Start an asynchronous memory export; Lara will notify the callback URL when ready
 var memoryExport = await lara.Memories.ExportAsync(
     "mem_1A2b3C4d5E6f7G8h9I0jKl",
@@ -404,7 +396,7 @@ var glossaryImport = await lara.Glossaries.ImportFile(
     glossaryFilePath,
     new GlossaryImportOptions { ContentType = GlossaryFileFormat.CsvTableUni });
 
-// Omit options to use unidirectional CSV and detect gzip from the filename.
+// Omit options to use unidirectional CSV.
 
 // CSV import with a callback URL; Lara notifies the callback URL once the import finishes
 var glossaryImportWithCallback = await lara.Glossaries.ImportFile(
