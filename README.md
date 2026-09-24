@@ -287,6 +287,38 @@ var textBlocks = await lara.Images.TranslateText(imagePath, "en", "fr", new Imag
 });
 ```
 
+Request layout independently of verbose match details, then render the supplied translations:
+
+```csharp
+var result = await lara.Images.TranslateText(imagePath, "en", "fr",
+    new ImageTextTranslateOptions { IncludeLayout = true });
+if (result.Paragraphs.Length > 0)
+{
+    var paragraph = result.Paragraphs[0];
+    result.Paragraphs[0] = new ImageParagraph(paragraph.Text, "Bonjour !")
+    {
+        BBox = paragraph.BBox,
+        LinesBBoxes = paragraph.LinesBBoxes,
+        TextInfo = paragraph.TextInfo,
+        Alignment = paragraph.Alignment
+    };
+}
+await using var rendered = await lara.Images.RenderTranslated(
+    imagePath, result.SourceLanguage, "fr", result.Paragraphs,
+    ImageTranslationModel.Overlay);
+await using var output = File.Create("rendered.png");
+await rendered.CopyToAsync(output);
+```
+
+When `IncludeLayout` is `true`, every paragraph contains complete layout metadata and can be passed
+directly to a classic rendering model. The properties remain nullable because `ImageParagraph` also
+represents text-only responses when layout is not requested. Rendering uses the supplied translations
+without translating again and defaults to `GenerativeFast`. Pass `model` and `noTrace` to configure rendering.
+`Overlay` and `Inpainting` require `BBox`, `LinesBBoxes`, `TextInfo`, and `Alignment` on every paragraph;
+generative models accept text-only paragraphs or complete layout. Memory and glossary matches are
+omitted from rendering requests. Dispose the returned stream after reading it.
+
+
 ### 🎵 Audio Translation
 #### Simple audio translation
 

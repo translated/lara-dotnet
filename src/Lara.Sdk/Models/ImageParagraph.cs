@@ -25,7 +25,31 @@ public class ImageParagraph
     /// <summary>
     /// Gets an array of glossary matches for this paragraph.
     /// </summary>
+    [JsonPropertyName("glossaries_matches")]
     public NGGlossaryMatch[] GlossaryMatches { get; }
+
+    /// <summary>
+    /// Paragraph corners. This and the other layout properties are populated when
+    /// <see cref="ImageTextTranslateOptions.IncludeLayout"/> is <c>true</c>.
+    /// </summary>
+    [JsonPropertyName("bbox")]
+    public ImageBBox? BBox { get; init; }
+
+    /// <summary>Bounding boxes for individual lines.</summary>
+    [JsonPropertyName("lines_bboxes")]
+    public ImageBBox[]? LinesBBoxes { get; init; }
+
+    /// <summary>Original text direction and colors.</summary>
+    public ImageTextInfo? TextInfo { get; init; }
+
+    /// <summary>Text alignment: left, center, or right.</summary>
+    public string? Alignment { get; init; }
+
+    /// <summary>Creates a paragraph containing supplied text and its translation.</summary>
+    public ImageParagraph(string text, string translation)
+        : this(text, translation, Array.Empty<NGMemoryMatch>(), Array.Empty<NGGlossaryMatch>())
+    {
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImageParagraph"/> class.

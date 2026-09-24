@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Lara.Sdk;
 
 /// <summary>
@@ -82,7 +84,8 @@ public class ImageTranslator
             .Set("style", options?.Style?.ToString().ToLowerInvariant())
             .Set("adapt_to", options?.AdaptTo)
             .Set("glossaries", options?.Glossaries)
-            .Set("verbose", options?.Verbose);
+            .Set("verbose", options?.Verbose.ToString().ToLowerInvariant())
+            .Set("include_layout", options?.IncludeLayout.ToString().ToLowerInvariant());
     
         var headers = new Dictionary<string, string>();
         if (options?.NoTrace == true)
@@ -93,18 +96,61 @@ public class ImageTranslator
         return await _client.Post<ImageTextResult>("/v2/images/translate-text", parameters.Build(), files, headers);
     }
 
+    /// <summary>
+    /// Renders supplied translations onto the original image without translating again.
+    /// Overlay and inpainting require BBox, LinesBBoxes, TextInfo, and Alignment on every
+    /// paragraph. Generative models accept text-only paragraphs or complete layout.
+    /// An omitted model defaults to generative_fast. The caller must dispose the returned stream.
+    /// </summary>
+    public async Task<Stream> RenderTranslated(
+        string imagePath,
+        string? source,
+        string target,
+        IEnumerable<ImageParagraph> paragraphs,
+        ImageTranslationModel? model = null,
+        bool noTrace = false)
+    {
+        var renderParagraphs = paragraphs.Select(paragraph =>
+        {
+            var fields = new HttpParams<object>();
+            return fields.Set("text", paragraph.Text)
+                .Set("translation", paragraph.Translation)
+                .Set("bbox", paragraph.BBox)
+                .Set("lines_bboxes", paragraph.LinesBBoxes)
+                .Set("text_info", paragraph.TextInfo)
+                .Set("alignment", paragraph.Alignment)
+                .Build();
+        }).ToArray();
+
+        await using var fileStream = File.OpenRead(imagePath);
+        var files = new Dictionary<string, Stream> { ["image"] = fileStream };
+        var parameters = new HttpParams<object>();
+        parameters.Set("target", target)
+            .Set("source", source)
+            .Set("paragraphs", JsonSerializer.Serialize(renderParagraphs))
+            .Set("model", SerializeRenderingModel(model));
+        var headers = new Dictionary<string, string>();
+        if (noTrace)
+        {
+            headers["X-No-Trace"] = "true";
+        }
+        return await _client.Post<Stream>("/v2/images/render-translated", parameters.Build(), files, headers);
+    }
+
+    private static string? SerializeRenderingModel(ImageTranslationModel? model) => model switch
+    {
+        ImageTranslationModel.Overlay => "overlay",
+        ImageTranslationModel.Inpainting => "inpainting",
+        ImageTranslationModel.Generative => "generative",
+        ImageTranslationModel.GenerativeFast => "generative_fast",
+        _ => null
+    };
+
     private static string? SerializeModel(ImageTranslateOptions? options)
     {
         if (options?.Model is { } model)
         {
-            return model switch
-            {
-                ImageTranslationModel.Overlay => "overlay",
-                ImageTranslationModel.Inpainting => "inpainting",
-                ImageTranslationModel.Generative => "generative",
-                ImageTranslationModel.GenerativeFast => "generative_fast",
-                _ => null
-            };
+            return SerializeRenderingModel(model);
         }
 
 #pragma warning disable CS0618

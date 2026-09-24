@@ -133,6 +133,9 @@ public class LaraClient
     {
         await EnsureAuthenticated();
 
+        var filePositions = files?.Where(file => file.Value.CanSeek)
+            .ToDictionary(file => file.Key, file => file.Value.Position);
+
         var request = new HttpRequestMessage(method, path);
         SetDateHeader(request);
 
@@ -200,6 +203,12 @@ public class LaraClient
         {
             _token = null;
             await RefreshOrReauthenticate();
+            // Multipart encoding consumed the streams; replay the original bytes.
+            if (filePositions != null)
+            {
+                foreach (var (name, position) in filePositions)
+                    files![name].Position = position;
+            }
             return await Request<T>(method, path, parameters, files, headers, true);
         }
 

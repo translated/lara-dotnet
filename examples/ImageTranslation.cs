@@ -111,7 +111,8 @@ namespace Lara.SDK.Examples
                 {
                     AdaptTo = new[] { "mem_1A2b3C4d5E6f7G8h9I0jKl" },  // Replace with actual memory IDs
                     Glossaries = new[] { "gls_1A2b3C4d5E6f7G8h9I0jKl" },  // Replace with actual glossary IDs
-                    Style = TranslationStyle.Faithful
+                    Style = TranslationStyle.Faithful,
+                    IncludeLayout = true
                 };
 
                 var results = await lara.Images.TranslateText(sampleFilePath, sourceLang, targetLang, options);
@@ -126,6 +127,12 @@ namespace Lara.SDK.Examples
                     Console.WriteLine($"Original: {paragraph.Text}");
                     Console.WriteLine($"Translated: {paragraph.Translation}");
                 }
+                // IncludeLayout guarantees the metadata required by classic rendering models.
+                await using var rendered = await lara.Images.RenderTranslated(
+                    sampleFilePath, results.SourceLanguage, targetLang, results.Paragraphs,
+                    ImageTranslationModel.Overlay);
+                await using var output = File.Create("rendered_image.png");
+                await rendered.CopyToAsync(output);
             }
             catch (LaraException e)
             {

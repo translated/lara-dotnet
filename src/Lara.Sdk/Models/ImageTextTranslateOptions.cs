@@ -34,4 +34,10 @@ public class ImageTextTranslateOptions
     /// or diagnostic information where supported.
     /// </summary>
     public bool Verbose { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, includes complete paragraph geometry and text styling on every
+    /// returned paragraph, independently of <see cref="Verbose"/>.
+    /// </summary>
+    public bool IncludeLayout { get; set; }
 }
