@@ -34,16 +34,33 @@ public class Glossary
     [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
     public bool IsPersonal { get; }
 
+    /// Effective combined mask in GET list/detail; selected share's stored mask in GET /shares.
+    /// Null when omitted, including non-GET responses.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public PermissionMask? PermissionMask { get; }
+
+    public Glossary(
+        string id,
+        DateTime createdAt,
+        DateTime updatedAt,
+        DateTime sharedAt,
+        string name,
+        string ownerId,
+        bool isPersonal)
+        : this(id, createdAt, updatedAt, sharedAt, name, ownerId, isPersonal, null)
+    {
+    }
+
     [JsonConstructor]
     public Glossary(
-        string id, 
-        DateTime createdAt, 
-        DateTime updatedAt, 
+        string id,
+        DateTime createdAt,
+        DateTime updatedAt,
         DateTime sharedAt,
-        string name, 
+        string name,
         string ownerId,
-        bool isPersonal
-        )
+        bool isPersonal,
+        PermissionMask? permissionMask)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -52,6 +69,7 @@ public class Glossary
         Name = name;
         OwnerId = ownerId;
         IsPersonal = isPersonal;
+        PermissionMask = permissionMask;
     }
 
     /// Gets the unique identifier for the glossary.

@@ -35,19 +35,40 @@ public class Memory
     [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
     public bool IsPersonal { get; }
 
+    /// Effective combined mask in GET list/detail; selected share's stored mask in GET /shares.
+    /// Null when omitted, including non-GET responses.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public PermissionMask? PermissionMask { get; }
+
     /// Initializes a new instance of the Memory class.
-    [JsonConstructor]
     public Memory(
-        string id, 
-        DateTime createdAt, 
-        DateTime updatedAt, 
+        string id,
+        DateTime createdAt,
+        DateTime updatedAt,
         DateTime sharedAt,
-        string name, 
-        string? externalId, 
-        string? secret, 
-        string ownerId, 
+        string name,
+        string? externalId,
+        string? secret,
+        string ownerId,
         int collaboratorsCount,
         bool isPersonal)
+        : this(id, createdAt, updatedAt, sharedAt, name, externalId, secret, ownerId, collaboratorsCount, isPersonal, null)
+    {
+    }
+
+    [JsonConstructor]
+    public Memory(
+        string id,
+        DateTime createdAt,
+        DateTime updatedAt,
+        DateTime sharedAt,
+        string name,
+        string? externalId,
+        string? secret,
+        string ownerId,
+        int collaboratorsCount,
+        bool isPersonal,
+        PermissionMask? permissionMask)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -59,6 +80,7 @@ public class Memory
         OwnerId = ownerId;
         CollaboratorsCount = collaboratorsCount;
         IsPersonal = isPersonal;
+        PermissionMask = permissionMask;
     }
 
     /// Gets the unique identifier for the memory.

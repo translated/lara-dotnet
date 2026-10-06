@@ -311,15 +311,15 @@ namespace Lara.SDK.Examples
                 var shares = await lara.Glossaries.GetShares(glossaryId);
                 if (shares.Account != null)
                 {
-                    Console.WriteLine($"Account share '{shares.Account.ShareName}' ({shares.Account.Permissions})");
+                    Console.WriteLine($"Account share '{shares.Account.ShareName}' ({shares.Account.PermissionMask})");
                 }
                 foreach (var group in shares.Groups)
                 {
-                    Console.WriteLine($"Group {group.Name}: '{group.ShareName}' ({group.Permissions})");
+                    Console.WriteLine($"Group {group.Name}: '{group.ShareName}' ({group.PermissionMask})");
                 }
                 foreach (var user in shares.Users)
                 {
-                    Console.WriteLine($"User {user.Name}: '{user.ShareName}' ({user.Permissions})");
+                    Console.WriteLine($"User {user.Name}: '{user.ShareName}' ({user.PermissionMask})");
                 }
 
                 // Revoke the account/team share

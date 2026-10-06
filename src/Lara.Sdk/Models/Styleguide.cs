@@ -30,7 +30,11 @@ public class Styleguide
     [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
     public bool IsPersonal { get; }
 
-    [JsonConstructor]
+    /// Effective combined mask in GET list/detail; selected share's stored mask in GET /shares.
+    /// Null when omitted, including non-GET responses.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public PermissionMask? PermissionMask { get; }
+
     public Styleguide(
         string id,
         string name,
@@ -40,6 +44,21 @@ public class Styleguide
         DateTime updatedAt,
         DateTime sharedAt,
         bool isPersonal)
+        : this(id, name, content, ownerId, createdAt, updatedAt, sharedAt, isPersonal, null)
+    {
+    }
+
+    [JsonConstructor]
+    public Styleguide(
+        string id,
+        string name,
+        string? content,
+        string ownerId,
+        DateTime createdAt,
+        DateTime updatedAt,
+        DateTime sharedAt,
+        bool isPersonal,
+        PermissionMask? permissionMask)
     {
         Id = id;
         Name = name;
@@ -49,6 +68,7 @@ public class Styleguide
         UpdatedAt = updatedAt;
         SharedAt = sharedAt;
         IsPersonal = isPersonal;
+        PermissionMask = permissionMask;
     }
 
     public override string ToString()

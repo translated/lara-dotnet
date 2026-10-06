@@ -6,13 +6,13 @@ namespace Lara.Sdk;
 public class ResourceShareEntry
 {
     [JsonConstructor]
-    public ResourceShareEntry(string id, string name, string shareName, DateTime sharedAt, string permissions)
+    public ResourceShareEntry(string id, string name, string shareName, DateTime sharedAt, PermissionMask permissionMask)
     {
         Id = id;
         Name = name;
         ShareName = shareName;
         SharedAt = sharedAt;
-        Permissions = permissions;
+        PermissionMask = permissionMask;
     }
 
     public string Id { get; }
@@ -20,8 +20,8 @@ public class ResourceShareEntry
     public string ShareName { get; }
     public DateTime SharedAt { get; }
 
-    /// Permission granted by the share: "read" or "read_write".
-    public string Permissions { get; }
+    /// The permissions stored on this share.
+    public PermissionMask PermissionMask { get; }
 }
 
 public class MemoryShares
