@@ -1,125 +1,107 @@
 #!/usr/bin/env python3
-import glob
-import os
-import subprocess
-import sys
+"""Bump the SDK version, commit the changed files, and create a release tag."""
+
+import argparse
+from pathlib import Path
 import re
-from typing import List
+import subprocess
 
 
-def die(msg: str):
-    print(msg, file=sys.stderr)
-    sys.exit(1)
+ROOT = Path(__file__).resolve().parent
+FIELDS = (('src/Lara.Sdk/Lara.Sdk.csproj', '(?P<before><Version>)(?P<version>\\d+\\.\\d+\\.\\d+)(?P<after></Version>)'), ('src/Lara.Sdk/Lara.Sdk.csproj', '(?P<before><AssemblyVersion>)(?P<version>\\d+\\.\\d+\\.\\d+)(?P<after>\\.0</AssemblyVersion>)'), ('src/Lara.Sdk/Lara.Sdk.csproj', '(?P<before><FileVersion>)(?P<version>\\d+\\.\\d+\\.\\d+)(?P<after>\\.0</FileVersion>)'), ('src/Lara.Sdk/SdkVersion.cs', '(?P<before>public const string Version = ")(?P<version>\\d+\\.\\d+\\.\\d+)(?P<after>";)'))
 
 
-def cmd_exec(cmd: List[str]) -> str:
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if result.returncode != 0:
-        die(f"Error: Failed to execute command: {' '.join(cmd)}\n{result.stderr}")
-    return result.stdout.strip()
+def fail(message):
+    raise SystemExit(f"Error: {message}")
 
 
-def check_git_status():
-    stdout = cmd_exec(["git", "status", "--porcelain"])
-    if len(stdout) > 0:
-        die("Error: There are uncommitted changes. Please commit or stash them before proceeding.")
-
-    stdout = cmd_exec(["git", "tag", "--points-at", "HEAD"])
-    if len(stdout) > 0:
-        die("Error: HEAD is already tagged.")
-
-    branch = cmd_exec(["git", "branch", "--show-current"])
-    if branch != "main":
-        die("Error: You must be on the main branch to update the version.")
-
-def get_version_from_csproj(csproj_file: str) -> str:
-    with open(csproj_file, "r") as f:
-        content = f.read()
-
-    # Look for Version tag in the csproj file
-    version_match = re.search(r'<Version>([^<]+)</Version>', content)
-    if version_match:
-        return version_match.group(1)
-
-    die(f"Error: Could not find Version in {csproj_file}.")
+def git(*args, check=True):
+    result = subprocess.run(
+        ["git", *args], cwd=ROOT, text=True, capture_output=True
+    )
+    if check and result.returncode != 0:
+        fail(result.stderr.strip() or f"git {' '.join(args)} failed")
+    return result
 
 
-def set_version_in_csproj(csproj_file: str, version: str):
-    with open(csproj_file, "r") as f:
-        content = f.read()
+def check_git():
+    if git("status", "--porcelain").stdout.strip():
+        fail("Working tree is not clean. Commit or stash changes first.")
+    if git("branch", "--show-current").stdout.strip() != "main":
+        fail("Version bumps must be run on main.")
 
-    # Update Version tag
-    content = re.sub(r'<Version>[^<]+</Version>', f'<Version>{version}</Version>', content)
-    
-    # Update AssemblyVersion and FileVersion
-    content = re.sub(r'<AssemblyVersion>[^<]+</AssemblyVersion>', f'<AssemblyVersion>{version}.0</AssemblyVersion>', content)
-    content = re.sub(r'<FileVersion>[^<]+</FileVersion>', f'<FileVersion>{version}.0</FileVersion>', content)
 
-    with open(csproj_file, "w") as f:
-        f.write(content)
-
-def set_version_in_SdkVersion(sdk_version_file: str, version: str):
-    with open(sdk_version_file, "r") as f:
-        content = f.read()
-        
-    # Update the version line
-    content = re.sub(
-        r'public const string Version = "\d+\.\d+\.\d+";',
-        f'public const string Version = "{version}";',
-        content
-        )
-    
-    with open(sdk_version_file, "w") as f:
-        f.write(content)
-
-def update_version(part: str) -> str:
-    # Find the main SDK csproj file
-    csproj_file = os.path.join(os.path.dirname(__file__), "src", "Lara.Sdk", "Lara.Sdk.csproj")
-    sdk_version_file = os.path.join(os.path.dirname(__file__), "src", "Lara.Sdk", "SdkVersion.cs")
-
-    # Update version
-    version = get_version_from_csproj(csproj_file)
-
-    major, minor, patch = version.split(".")
+def next_version(current, part):
+    major, minor, patch = map(int, current.split("."))
     if part == "major":
-        major = str(int(major) + 1)
-        minor = "0"
-        patch = "0"
-    elif part == "minor":
-        minor = str(int(minor) + 1)
-        patch = "0"
-    elif part == "patch":
-        patch = str(int(patch) + 1)
-    else:
-        die("Error: Invalid version part.")
-
-    new_version = f"{major}.{minor}.{patch}"
-
-    set_version_in_csproj(csproj_file, new_version)
-    set_version_in_SdkVersion(sdk_version_file, new_version)
-
-    return new_version
+        return f"{major + 1}.0.0"
+    if part == "minor":
+        return f"{major}.{minor + 1}.0"
+    return f"{major}.{minor}.{patch + 1}"
 
 
-def git_tag(version: str):
-    cmd_exec(["git", "add", "."])
-    cmd_exec(["git", "commit", "-m", f"v{version}"])
-    cmd_exec(["git", "tag", "-a", f"v{version}", "-m", f"v{version}"])
+def plan_changes(part):
+    contents = {}
+    matches = []
+    for relative_path, pattern in FIELDS:
+        path = ROOT / relative_path
+        if relative_path not in contents:
+            try:
+                contents[relative_path] = path.read_text(encoding="utf-8")
+            except OSError as error:
+                fail(f"Cannot read {relative_path}: {error}")
+        found = list(re.finditer(pattern, contents[relative_path]))
+        if len(found) != 1:
+            fail(f"Expected one version field in {relative_path}; found {len(found)}")
+        matches.append((relative_path, found[0]))
+
+    current = matches[0][1].group("version")
+    for relative_path, match in matches[1:]:
+        if match.group("version") != current:
+            fail(f"Version in {relative_path} differs from {current}")
+
+    updated = next_version(current, part)
+    tag = f"v{updated}"
+    tag_check = git("show-ref", "--verify", "--quiet", f"refs/tags/{tag}", check=False)
+    if tag_check.returncode == 0:
+        fail(f"Tag {tag} already exists.")
+    if tag_check.returncode != 1:
+        fail(tag_check.stderr.strip() or f"Could not check whether tag {tag} exists")
+
+    for relative_path in contents:
+        file_matches = [match for name, match in matches if name == relative_path]
+        content = contents[relative_path]
+        for match in reversed(file_matches):
+            start, end = match.span("version")
+            content = content[:start] + updated + content[end:]
+        contents[relative_path] = content
+    return current, updated, contents
 
 
 def main():
-    args = sys.argv[1:]
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("part", choices=("major", "minor", "patch"))
+    parser.add_argument("--dry-run", action="store_true", help="show the bump without changing files or Git")
+    args = parser.parse_args()
 
-    if len(args) != 1 or args[0] not in ["major", "minor", "patch"]:
-        print("Usage: python3 version.py [major|minor|patch]")
-        sys.exit(1)
+    check_git()
+    current, updated, changes = plan_changes(args.part)
+    if args.dry_run:
+        print(f"Would bump {current} to {updated} and create tag v{updated}")
+        for relative_path in changes:
+            print(f"  {relative_path}")
+        return
 
-    check_git_status()
-    version = update_version(args[0])
-    git_tag(version)
+    for relative_path, content in changes.items():
+        try:
+            (ROOT / relative_path).write_text(content, encoding="utf-8")
+        except OSError as error:
+            fail(f"Cannot write {relative_path}: {error}")
+    git("add", "--", *changes)
+    git("commit", "-m", f"v{updated}")
+    git("tag", "-a", f"v{updated}", "-m", f"v{updated}")
+    print(f"Tag v{updated} created.")
 
-    print(f"Tag v{version} created.")
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
