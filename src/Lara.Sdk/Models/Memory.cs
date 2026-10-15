@@ -31,10 +31,6 @@ public class Memory
     /// Gets the number of collaborators with access to this memory.
     public int CollaboratorsCount { get; }
 
-    /// Gets the isPersonal property.
-    [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
-    public bool IsPersonal { get; }
-
     /// Effective combined mask in GET list/detail; selected share's stored mask in GET /shares.
     /// Null when omitted, including non-GET responses.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -50,9 +46,8 @@ public class Memory
         string? externalId,
         string? secret,
         string ownerId,
-        int collaboratorsCount,
-        bool isPersonal)
-        : this(id, createdAt, updatedAt, sharedAt, name, externalId, secret, ownerId, collaboratorsCount, isPersonal, null)
+        int collaboratorsCount)
+        : this(id, createdAt, updatedAt, sharedAt, name, externalId, secret, ownerId, collaboratorsCount, null)
     {
     }
 
@@ -67,7 +62,6 @@ public class Memory
         string? secret,
         string ownerId,
         int collaboratorsCount,
-        bool isPersonal,
         PermissionMask? permissionMask)
     {
         Id = id;
@@ -79,7 +73,6 @@ public class Memory
         Secret = secret;
         OwnerId = ownerId;
         CollaboratorsCount = collaboratorsCount;
-        IsPersonal = isPersonal;
         PermissionMask = permissionMask;
     }
 

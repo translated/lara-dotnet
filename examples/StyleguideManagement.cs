@@ -63,7 +63,6 @@ namespace Lara.SDK.Examples
                 if (retrievedStyleguide != null)
                 {
                     Console.WriteLine($"Styleguide: {retrievedStyleguide.Name} (Owner: {retrievedStyleguide.OwnerId})");
-                    Console.WriteLine($"   Personal: {retrievedStyleguide.IsPersonal}");
                     Console.WriteLine($"   Created at: {retrievedStyleguide.CreatedAt}");
                     if (!string.IsNullOrEmpty(retrievedStyleguide.Content))
                     {

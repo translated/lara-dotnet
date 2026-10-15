@@ -26,10 +26,6 @@ public class Styleguide
     /// Gets the date and time when the styleguide was shared.
     public DateTime SharedAt { get; }
 
-    /// Gets the isPersonal property.
-    [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
-    public bool IsPersonal { get; }
-
     /// Effective combined mask in GET list/detail; selected share's stored mask in GET /shares.
     /// Null when omitted, including non-GET responses.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -42,9 +38,8 @@ public class Styleguide
         string ownerId,
         DateTime createdAt,
         DateTime updatedAt,
-        DateTime sharedAt,
-        bool isPersonal)
-        : this(id, name, content, ownerId, createdAt, updatedAt, sharedAt, isPersonal, null)
+        DateTime sharedAt)
+        : this(id, name, content, ownerId, createdAt, updatedAt, sharedAt, null)
     {
     }
 
@@ -57,7 +52,6 @@ public class Styleguide
         DateTime createdAt,
         DateTime updatedAt,
         DateTime sharedAt,
-        bool isPersonal,
         PermissionMask? permissionMask)
     {
         Id = id;
@@ -67,7 +61,6 @@ public class Styleguide
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         SharedAt = sharedAt;
-        IsPersonal = isPersonal;
         PermissionMask = permissionMask;
     }
 

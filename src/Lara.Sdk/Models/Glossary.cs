@@ -30,10 +30,6 @@ public class Glossary
     /// Gets the owner ID of the glossary.
     public string OwnerId { get; }
 
-    /// Gets the isPersonal property.
-    [JsonConverter(typeof(NullToFalseBooleanJsonConverter))]
-    public bool IsPersonal { get; }
-
     /// Effective combined mask in GET list/detail; selected share's stored mask in GET /shares.
     /// Null when omitted, including non-GET responses.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -45,9 +41,8 @@ public class Glossary
         DateTime updatedAt,
         DateTime sharedAt,
         string name,
-        string ownerId,
-        bool isPersonal)
-        : this(id, createdAt, updatedAt, sharedAt, name, ownerId, isPersonal, null)
+        string ownerId)
+        : this(id, createdAt, updatedAt, sharedAt, name, ownerId, null)
     {
     }
 
@@ -59,7 +54,6 @@ public class Glossary
         DateTime sharedAt,
         string name,
         string ownerId,
-        bool isPersonal,
         PermissionMask? permissionMask)
     {
         Id = id;
@@ -68,7 +62,6 @@ public class Glossary
         SharedAt = sharedAt;
         Name = name;
         OwnerId = ownerId;
-        IsPersonal = isPersonal;
         PermissionMask = permissionMask;
     }
 
