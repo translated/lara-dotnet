@@ -228,6 +228,47 @@ var options = new TranslateOptions
 var result = await lara.Translate("Hello", "en-US", "fr-FR", options);
 ```
 
+#### Text Translation with Image Context
+
+Pass `ImageContext` to use an image as visual context for translating text, with reasoning enabled:
+
+```csharp
+var options = new TranslateOptions
+{
+    Reasoning = true,
+    ImageContext = new ImageContext("https://example.com/storefront.png")
+};
+var result = await lara.Translate("Open", "en-US", "it-IT", options);
+Console.WriteLine(result.Translation);
+
+if (result.Warnings?.Reasoning is { } reasoning)
+{
+    foreach (var warning in reasoning.Warnings)
+        Console.WriteLine($"{warning.Code}: {warning.Message}");
+}
+```
+
+You can also supply a single-element array or an inline image:
+
+```csharp
+var encoded = Convert.ToBase64String(File.ReadAllBytes("storefront.png"));
+options.ImageContext = new[] { new ImageContext($"data:image/png;base64,{encoded}") };
+```
+
+The API accepts at most one image: an HTTPS URL or a base64 PNG, JPEG or WebP data
+URL. Inline images must match their declared MIME type and contain at most 5 MiB
+of decoded data; the serialized request body is limited to 16 MiB. Omitting
+`ImageContext` or passing `Array.Empty<ImageContext>()` preserves text-only behavior. Validation is performed
+by the API, which returns 400 for invalid input and 413 for size violations.
+
+If the image cannot be used, the server may retry the entire request with reasoning
+without images. The result then includes an `image_context_unavailable` warning
+under `warnings.reasoning.warnings` in the API response, exposed by the typed warning
+models shown above. `warnings.reasoning.applied` is `true` when reasoning succeeds
+without images, or `false` (with an error containing `statusCode` and `message`) when
+the server falls back to standard translation. Reference retrieval and prosa failures
+are available under `warnings.references` and `warnings.prosa`.
+
 ### 📖 Document Translation
 #### Simple document translation
 

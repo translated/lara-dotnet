@@ -27,6 +27,8 @@ public class TextResult<T>
 
     public StyleguideResults<T>? StyleguideResults { get; }
 
+    public TextWarnings? Warnings { get; }
+
     [Obsolete("Use the Translation property directly. This property will be removed in a future release.")]
     public string? SingleTranslation => Translation as string;
 
@@ -66,7 +68,8 @@ public class TextResult<T>
         object? glossariesMatches,
         ProfanitiesResult? profanities,
         StyleguideResults<T>? styleguideResults,
-        T translation)
+        T translation,
+        TextWarnings? warnings = null)
     {
         ContentType = contentType;
         SourceLanguage = sourceLanguage;
@@ -77,5 +80,6 @@ public class TextResult<T>
         Profanities = profanities;
         StyleguideResults = styleguideResults;
         Translation = translation;
+        Warnings = warnings;
     }
 }
