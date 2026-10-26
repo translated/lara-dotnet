@@ -52,8 +52,8 @@ namespace Lara.SDK.Examples
                 styleguideId = styleguide.Id;
 
                 // List all styleguides
-                var styleguides = await lara.Styleguides.List();
-                Console.WriteLine($"Total styleguides: {styleguides.Count}");
+                var styleguides = await lara.Styleguides.ListPaginated();
+                Console.WriteLine($"Total styleguides: {styleguides.Total}");
                 Console.WriteLine();
 
                 // Example 2: Styleguide operations

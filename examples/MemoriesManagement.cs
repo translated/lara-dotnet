@@ -69,8 +69,8 @@ namespace Lara.SDK.Examples
                 Console.WriteLine();
 
                 // List all memories
-                var memories = await lara.Memories.List();
-                Console.WriteLine($"Total memories: {memories.Count}\n");
+                var memories = await lara.Memories.ListPaginated();
+                Console.WriteLine($"Total memories: {memories.Total}\n");
 
                 // Store the memory ID for later examples
                 memoryId = memory.Id;

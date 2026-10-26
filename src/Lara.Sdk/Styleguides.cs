@@ -11,9 +11,20 @@ public class Styleguides
     }
 
     /// Lists all styleguides available to the user.
+    [Obsolete("Use ListPaginated() instead.")]
     public async Task<List<Styleguide>> List()
     {
         return await _client.Get<List<Styleguide>>("/v2/styleguides");
+    }
+
+    /// <summary>Lists styleguides with optional name filtering and pagination.</summary>
+    /// <remarks>
+    /// Without options, returns the complete collection without pagination.
+    /// Providing search, page, or size enables pagination; omitted page and size default to 1 and 20.
+    /// </remarks>
+    public async Task<CollectionResult<Styleguide>> ListPaginated(ResourceQueryOptions? options = null)
+    {
+        return await _client.GetCollection<Styleguide>("/v2/styleguides", options?.ToParams().Build());
     }
 
     /// Gets a styleguide by ID.

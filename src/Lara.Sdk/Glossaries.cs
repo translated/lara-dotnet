@@ -13,9 +13,20 @@ public class Glossaries
     }
 
     /// Lists all glossaries available to the user.
+    [Obsolete("Use ListPaginated() instead.")]
     public async Task<List<Glossary>> List()
     {
         return await _client.Get<List<Glossary>>("/v2/glossaries");
+    }
+
+    /// <summary>Lists glossaries with optional name filtering and pagination.</summary>
+    /// <remarks>
+    /// Without options, returns the complete collection without pagination.
+    /// Providing search, page, or size enables pagination; omitted page and size default to 1 and 20.
+    /// </remarks>
+    public async Task<CollectionResult<Glossary>> ListPaginated(ResourceQueryOptions? options = null)
+    {
+        return await _client.GetCollection<Glossary>("/v2/glossaries", options?.ToParams().Build());
     }
     
     /// Creates a new glossary with a custom name.

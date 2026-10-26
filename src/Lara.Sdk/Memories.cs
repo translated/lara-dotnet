@@ -14,9 +14,20 @@ public class Memories
     }
     
     /// Lists all memories.
+    [Obsolete("Use ListPaginated() instead.")]
     public async Task<List<Memory>> List()
     {
         return await _client.Get<List<Memory>>("/v2/memories");
+    }
+
+    /// <summary>Lists memories with optional name filtering and pagination.</summary>
+    /// <remarks>
+    /// Without options, returns the complete collection without pagination.
+    /// Providing search, page, or size enables pagination; omitted page and size default to 1 and 20.
+    /// </remarks>
+    public async Task<CollectionResult<Memory>> ListPaginated(ResourceQueryOptions? options = null)
+    {
+        return await _client.GetCollection<Memory>("/v2/memories", options?.ToParams().Build());
     }
     
     /// Creates a new memory with external ID

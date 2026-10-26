@@ -59,8 +59,8 @@ namespace Lara.SDK.Examples
                 Console.WriteLine($"Created glossary: {glossary.Name} (ID: {glossary.Id})");
 
                 // List all glossaries
-                var glossaries = await lara.Glossaries.List();
-                Console.WriteLine($"Total glossaries: {glossaries.Count}");
+                var glossaries = await lara.Glossaries.ListPaginated();
+                Console.WriteLine($"Total glossaries: {glossaries.Total}");
 
                 // Store the glossary ID for later examples
                 glossaryId = glossary.Id;

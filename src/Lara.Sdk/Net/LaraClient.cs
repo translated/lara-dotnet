@@ -69,13 +69,42 @@ public class LaraClient
 
     public async Task<T> Get<T>(string path, Dictionary<string, object>? queryParams = null, Dictionary<string, string>? headers = null)
     {
+        return await Request<T>(HttpMethod.Get, BuildPathWithQuery(path, queryParams), null, null, headers);
+    }
+
+    /// <summary>Gets a resource collection with count and pagination metadata from response headers.</summary>
+    public async Task<CollectionResult<T>> GetCollection<T>(string path, Dictionary<string, object>? queryParams = null, Dictionary<string, string>? headers = null)
+    {
+        var response = await RequestWithMetadata<List<T>>(HttpMethod.Get, BuildPathWithQuery(path, queryParams), null, null, headers);
+        var total = ReadIntegerHeader(response.Headers, "X-Total-Count", 0)
+            ?? throw new InvalidOperationException("Missing or invalid X-Total-Count response header.");
+        var page = ReadIntegerHeader(response.Headers, "X-Page", 1);
+        var parsedSize = ReadIntegerHeader(response.Headers, "X-Page-Size", 1);
+
+        int? size = parsedSize <= int.MaxValue ? (int?)parsedSize : null;
+
+        return new CollectionResult<T>(response.Body, total, page, size);
+    }
+
+    private static long? ReadIntegerHeader(HttpResponseHeaders headers, string name, long minimum)
+    {
+        if (!headers.TryGetValues(name, out var values)) return null;
+        var entries = values.ToArray();
+        return entries.Length == 1 &&
+            long.TryParse(entries[0], NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value >= minimum
+                ? value
+                : null;
+    }
+
+    private static string BuildPathWithQuery(string path, Dictionary<string, object>? queryParams)
+    {
         if (queryParams?.Count > 0)
         {
             var queryString = string.Join("&", queryParams.Select(kvp =>
                 $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value?.ToString() ?? "")}"));
             path = $"{path}?{queryString}";
         }
-        return await Request<T>(HttpMethod.Get, path, null, null, headers);
+        return path;
     }
 
     public async Task<T> Post<T>(string path, Dictionary<string, object>? parameters = null)
@@ -123,6 +152,19 @@ public class LaraClient
     // ─────────────────────────────────────────────────────────────────────────────
 
     private async Task<T> Request<T>(
+        HttpMethod method,
+        string path,
+        Dictionary<string, object>? parameters = null,
+        Dictionary<string, Stream>? files = null,
+        Dictionary<string, string>? headers = null,
+        bool isRetry = false
+    )
+    {
+        var response = await RequestWithMetadata<T>(method, path, parameters, files, headers, isRetry);
+        return response.Body;
+    }
+
+    private async Task<(T Body, HttpResponseHeaders Headers)> RequestWithMetadata<T>(
         HttpMethod method,
         string path,
         Dictionary<string, object>? parameters = null,
@@ -209,7 +251,7 @@ public class LaraClient
                 foreach (var (name, position) in filePositions)
                     files![name].Position = position;
             }
-            return await Request<T>(method, path, parameters, files, headers, true);
+            return await RequestWithMetadata<T>(method, path, parameters, files, headers, true);
         }
 
         if (!response.IsSuccessStatusCode)
@@ -221,15 +263,15 @@ public class LaraClient
         if (typeof(T) == typeof(Stream))
         {
             var stream = await response.Content.ReadAsStreamAsync();
-            return (T)(object)stream;
+            return ((T)(object)stream, response.Headers);
         }
 
         if (response.Content.Headers.ContentLength == 0)
-            return default!;
+            return (default!, response.Headers);
 
         var content = await response.Content.ReadAsStringAsync();
 
-        return JsonSerializer.Deserialize<T>(content, _jsonOptions)!;
+        return (JsonSerializer.Deserialize<T>(content, _jsonOptions)!, response.Headers);
     }
 
     private async IAsyncEnumerable<T> RequestStream<T>(

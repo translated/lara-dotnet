@@ -406,6 +406,33 @@ var memory = await lara.Memories.Create("MyMemory");
 // Create memory with external ID (MyMemory integration)
 var memory = await lara.Memories.Create("Memory from MyMemory", "aabb1122");  // Replace with actual external ID
 
+// ListPaginated() supports optional name filtering and pagination. Called without options,
+// it returns the complete list of memories without pagination. Providing Search, Page,
+// or Size enables pagination.
+var memoryCollection = await lara.Memories.ListPaginated();
+var memories = memoryCollection.Items;
+var memoryTotal = memoryCollection.Total;
+
+// Providing Page or Size enables pagination (Page starts at 1; Size: 1-200).
+// The missing parameter defaults to Page 1 or Size 20.
+var memoryPage = await lara.Memories.ListPaginated(new ResourceQueryOptions { Page = 2, Size = 50 });
+var memoryDefaultSize = await lara.Memories.ListPaginated(new ResourceQueryOptions { Page = 2 }); // Page 2, 20 per page
+var memoryFirstPage = await lara.Memories.ListPaginated(new ResourceQueryOptions { Size = 50 }); // Page 1, 50 per page
+
+// Pass Search to filter by displayed name (case- and accent-insensitive).
+// It matches substrings and preserves spaces; % and _ are supported wildcards.
+// Search must contain 1-255 characters. The API validates these options.
+// Combine Search with Page and Size to paginate matching results.
+// If omitted, Page defaults to 1 and Size to 20.
+var memorySearch = await lara.Memories.ListPaginated(new ResourceQueryOptions
+{
+    Search = "Marketing",
+    Page = 2,
+    Size = 50
+});
+
+// List() is deprecated with [Obsolete] and retains its List<T> return value; use ListPaginated().
+
 // Important: To update/overwrite a translation unit you must provide a tuid. Calls without a tuid always create a new unit and will not update existing entries.
 // Add translation to single memory
 var memoryImport = await lara.Memories.AddTranslation("mem_1A2b3C4d5E6f7G8h9I0jKl", "en-US", "fr-FR", "Hello", "Bonjour", "greeting_001");
@@ -462,6 +489,33 @@ await lara.Memories.RevokeAccountShare(memory.Id);
 // Create glossary
 var glossary = await lara.Glossaries.Create("MyGlossary");
 
+// ListPaginated() supports optional name filtering and pagination. Called without options,
+// it returns the complete list of glossaries without pagination. Providing Search, Page,
+// or Size enables pagination.
+var glossaryCollection = await lara.Glossaries.ListPaginated();
+var glossaries = glossaryCollection.Items;
+var glossaryTotal = glossaryCollection.Total;
+
+// Providing Page or Size enables pagination (Page starts at 1; Size: 1-200).
+// The missing parameter defaults to Page 1 or Size 20.
+var glossaryPage = await lara.Glossaries.ListPaginated(new ResourceQueryOptions { Page = 2, Size = 50 });
+var glossaryDefaultSize = await lara.Glossaries.ListPaginated(new ResourceQueryOptions { Page = 2 }); // Page 2, 20 per page
+var glossaryFirstPage = await lara.Glossaries.ListPaginated(new ResourceQueryOptions { Size = 50 }); // Page 1, 50 per page
+
+// Pass Search to filter by displayed name (case- and accent-insensitive).
+// It matches substrings and preserves spaces; % and _ are supported wildcards.
+// Search must contain 1-255 characters. The API validates these options.
+// Combine Search with Page and Size to paginate matching results.
+// If omitted, Page defaults to 1 and Size to 20.
+var glossarySearch = await lara.Glossaries.ListPaginated(new ResourceQueryOptions
+{
+    Search = "Marketing",
+    Page = 2,
+    Size = 50
+});
+
+// List() is deprecated with [Obsolete] and retains its List<T> return value; use ListPaginated().
+
 // Import a glossary file (use GlossaryFileFormat.Tbx for TBX files)
 var glossaryFilePath = "/path/to/your/glossary.csv";
 var glossaryImport = await lara.Glossaries.ImportFile(
@@ -514,8 +568,32 @@ var styleguide = await lara.Styleguides.Create(
     "Use a formal tone. Prefer British English spelling. Avoid contractions."
 );
 
-// List all styleguides
-var styleguides = await lara.Styleguides.List();
+// ListPaginated() supports optional name filtering and pagination. Called without options,
+// it returns the complete list of styleguides without pagination. Providing Search, Page,
+// or Size enables pagination.
+var styleguideCollection = await lara.Styleguides.ListPaginated();
+var styleguides = styleguideCollection.Items;
+var styleguideTotal = styleguideCollection.Total;
+
+// Providing Page or Size enables pagination (Page starts at 1; Size: 1-200).
+// The missing parameter defaults to Page 1 or Size 20.
+var styleguidePage = await lara.Styleguides.ListPaginated(new ResourceQueryOptions { Page = 2, Size = 50 });
+var styleguideDefaultSize = await lara.Styleguides.ListPaginated(new ResourceQueryOptions { Page = 2 }); // Page 2, 20 per page
+var styleguideFirstPage = await lara.Styleguides.ListPaginated(new ResourceQueryOptions { Size = 50 }); // Page 1, 50 per page
+
+// Pass Search to filter by displayed name (case- and accent-insensitive).
+// It matches substrings and preserves spaces; % and _ are supported wildcards.
+// Search must contain 1-255 characters. The API validates these options.
+// Combine Search with Page and Size to paginate matching results.
+// If omitted, Page defaults to 1 and Size to 20.
+var styleguideSearch = await lara.Styleguides.ListPaginated(new ResourceQueryOptions
+{
+    Search = "Marketing",
+    Page = 2,
+    Size = 50
+});
+
+// List() is deprecated with [Obsolete] and retains its List<T> return value; use ListPaginated().
 
 // Get a styleguide by ID (returns null if not found)
 var retrieved = await lara.Styleguides.Get("sg_1A2b3C4d5E6f7G8h9I0jKl");
