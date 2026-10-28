@@ -65,6 +65,10 @@ public class TranslateOptions
     [JsonPropertyName("reasoning")]
     public bool? Reasoning { get; set; }
 
+    /// Reasoning effort. Requires Reasoning=true; null uses the server default.
+    [JsonPropertyName("effort")]
+    public ReasoningEffort? Effort { get; set; }
+
     /// One ImageContext or an array of ImageContext. Non-empty context requires Reasoning=true.
     /// Image validation is performed by the API; an empty array preserves text-only behavior.
     [JsonPropertyName("image_context")]
@@ -114,6 +118,7 @@ public class TranslateOptions
             .Set("verbose", Verbose)
             .Set("style", Style?.ToString().ToLowerInvariant())
             .Set("reasoning", Reasoning)
+            .Set("effort", Effort?.ToString().ToLowerInvariant())
             .Set("image_context", ImageContext)
             .Set("metadata", Metadata)
             .Set("profanities_detect", ProfanitiesDetect switch

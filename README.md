@@ -228,6 +228,20 @@ var options = new TranslateOptions
 var result = await lara.Translate("Hello", "en-US", "fr-FR", options);
 ```
 
+#### Reasoning Effort
+
+Set `effort` to `low`, `medium`, or `high` to control translation reasoning effort.
+Reasoning must be enabled. Omit the option to use the server default; the API
+validates the combination.
+
+```csharp
+var result = await lara.Translate("Hello", "en-US", "it-IT", new TranslateOptions
+{
+    Reasoning = true,
+    Effort = ReasoningEffort.High
+});
+```
+
 #### Text Translation with Image Context
 
 Pass `ImageContext` to use an image as visual context for translating text, with reasoning enabled:
